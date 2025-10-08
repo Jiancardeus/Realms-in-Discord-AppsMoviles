@@ -1,4 +1,4 @@
-package com.example.actividad2.ui.theme
+package com.example.actividad2.ui.theme.screen
 
 
 import androidx.compose.foundation.layout.*
@@ -42,7 +42,7 @@ fun HomeScreen()   {
                 contentDescription = "Logo app",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(16.dp),
+                    .height(30.dp),
                 contentScale = ContentScale.Fit
             )
         }
