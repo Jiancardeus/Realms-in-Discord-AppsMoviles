@@ -1,7 +1,6 @@
 package com.example.actividad2
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,8 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.actividad2.ui.theme.Actividad2Theme
-import com.example.actividad2.ui.theme.HomeScreen
+import com.example.actividad2.ui.theme.theme.Actividad2Theme
+import com.example.actividad2.ui.theme.screen.HomeScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
