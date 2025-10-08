@@ -53,8 +53,22 @@ class UsuarioViewModel : ViewModel() {
     fun validarFormulario() : Boolean {
         val estadoActual = _estado.value
         val errores = UsuarioErrores(
-            nombre = if (estadoActual.nombre.isBlank())"Campo obligatorio "
+            nombre = if (estadoActual.nombre.isBlank())"Campo obligatorio" else null,
+            correo = if (estadoActual.correo.isBlank())"Campo obligatorio" else null,
+            clave = if (estadoActual.clave.isBlank())"Campo obligatorio" else null,
+            direcccion = if (estadoActual.direcccion.isBlank())"Campo obligatorio" else null,
         )
+
+        val hayErrores = listOfNotNull(
+            elements = errores.nombre,
+            errores.correo,
+            errores.clave,
+            errores.direcccion
+        ).isNotEmpty()
+
+        _estado.update { it.copy(errores = errores) }
+
+        return hayErrores
 
 
     }
