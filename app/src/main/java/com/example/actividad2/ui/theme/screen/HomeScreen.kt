@@ -18,24 +18,7 @@ import androidx.compose.material3.TopAppBar
 @Composable
 
 fun HomeScreen()   {
-    Scaffold (
-        topBar = {
-            TopAppBar(title = {Text("Mi TCG en Kotlin")})
-        }
-    ){ InnerPadding ->
-        Column (
-            modifier = Modifier
-                .padding(InnerPadding)
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            Text(text = "Bienvenido!")
-            Button(onClick = {}) {
-                Text("Presioname")
-            }
-        }
-    }
+
 }
 
 
