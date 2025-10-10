@@ -34,17 +34,6 @@ fun HomeScreen()   {
             Button(onClick = {}) {
                 Text("Presioname")
             }
-<<<<<<< HEAD:app/src/main/java/com/example/actividad2/ui/theme/HomeScreen.kt
-=======
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "Logo app",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(30.dp),
-                contentScale = ContentScale.Fit
-            )
->>>>>>> 838355cccc5771c37de91b3e15abbeca45e6da17:app/src/main/java/com/example/actividad2/ui/theme/screen/HomeScreen.kt
         }
     }
 }
