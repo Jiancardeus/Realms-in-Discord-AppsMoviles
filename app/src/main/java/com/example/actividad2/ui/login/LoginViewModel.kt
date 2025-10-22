@@ -2,72 +2,56 @@ package com.example.actividad2.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.actividad2.data.model.User
-import com.example.actividad2.domain.userCase.RegisterUseCase
+import com.example.actividad2.domain.useCase.LoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// Estado de la UI para el registro
-sealed class RegisterState {
-    object Idle : RegisterState()
-    object Loading : RegisterState()
-    object Success : RegisterState()
-    data class Error(val message: String) : RegisterState()
-}
+// Clase de estado para la UI (Maneja lo que la vista debe mostrar)
+data class LoginUiState(
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val isAuthenticated: Boolean = false
+)
 
-@HiltViewModel // Anotación de Hilt para inyección de ViewModel
-class RegisterViewModel @Inject constructor(
-    private val registerUseCase: RegisterUseCase
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val loginUseCase: LoginUseCase
 ) : ViewModel() {
 
-    private val _registerState = MutableStateFlow<RegisterState>(RegisterState.Idle)
-    val registerState: StateFlow<RegisterState> = _registerState
+    // 1. DECLARACIÓN DEL ESTADO INTERNO (MutableStateFlow)
+    private val _uiState = MutableStateFlow(LoginUiState())
 
-    /**
-     * Intenta registrar un nuevo usuario.
-     */
-    fun register(username: String, email: String, password: String) {
+    // 2. DECLARACIÓN DEL ESTADO PÚBLICO (StateFlow - Solo lectura)
+    val uiState: StateFlow<LoginUiState> = _uiState
+
+    fun login(username: String, password: String) {
+        // Ahora _uiState está definido y puede usarse.
+        if (_uiState.value.isLoading) return
+
+        _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
         viewModelScope.launch {
-            _registerState.value = RegisterState.Loading
-
-            // Validaciones básicas antes de intentar el registro
-            if (username.isBlank() || email.isBlank() || password.isBlank()) {
-                _registerState.value = RegisterState.Error("Todos los campos son obligatorios.")
-                return@launch
-            }
-
-            // Aquí se podría añadir validación de formato de email o fortaleza de contraseña
-            // ...
-
-            try {
-                // Crea el objeto User (con valores por defecto para level, exp, etc.)
-                val newUser = User(
-                    username = username,
-                    email = email,
-                    password = password // NOTA: En un proyecto real, la contraseña debe ser HASHED antes de guardarse.
-                )
-                val isSuccess = registerUseCase(newUser)
-
-                _registerState.value = if (isSuccess) {
-                    RegisterState.Success
-                } else {
-                    // isSuccess es false si el usuario ya existe
-                    RegisterState.Error("El nombre de usuario '$username' ya está en uso.")
+            when (val result = loginUseCase(username, password)) {
+                is LoginUseCase.LoginResult.Success -> {
+                    // Login Exitoso
+                    _uiState.value = _uiState.value.copy(
+                        isAuthenticated = true,
+                        isLoading = false
+                    )
                 }
-            } catch (e: Exception) {
-                // Manejo de otros errores (ej. error de base de datos)
-                _registerState.value = RegisterState.Error("Error al intentar registrar: ${e.message}")
+                is LoginUseCase.LoginResult.Error -> {
+                    // Login Fallido (manejo de errores de credenciales o conexión)
+                    _uiState.value = _uiState.value.copy(
+                        error = result.message,
+                        isLoading = false
+                    )
+                }
             }
         }
     }
 
-    /**
-     * Reinicia el estado a Idle después de un error o éxito si es necesario.
-     */
-    fun resetState() {
-        _registerState.value = RegisterState.Idle
-    }
 }
+

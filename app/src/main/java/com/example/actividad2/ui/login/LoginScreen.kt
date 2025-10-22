@@ -1,108 +1,104 @@
 package com.example.actividad2.ui.login
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.sp
+import com.example.actividad2.R // Importar recursos (drawable/mipmap)
+import com.example.actividad2.ui.theme.DarkGrayBackground
+import com.example.actividad2.ui.theme.TealAccent // Colores de ejemplo
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (String) -> Unit,
-    onNavigateToRegister: () -> Unit,
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel,
+    onLoginSuccess: (username: String) -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val loginState by viewModel.loginState.collectAsState()
+    // Reacciona al estado de autenticación exitosa
+    if (uiState.isAuthenticated) {
+        onLoginSuccess(username)
+    }
 
+    // El contenedor principal (simulando .login-container)
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Logo
-        Icon(
-            imageVector = Icons.Default.AccountCircle,
-            contentDescription = "Logo",
-            modifier = Modifier.size(120.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Text(
-            text = "Realms in Discord TCG",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Usuario") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        when (loginState) {
-            is LoginState.Error -> {
-                Text(
-                    text = (loginState as LoginState.Error).message,
-                    color = MaterialTheme.colorScheme.error
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            else -> {}
-        }
-
-        Button(
-            onClick = { viewModel.login(username, password) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = loginState != LoginState.Loading && username.isNotBlank() && password.isNotBlank()
+        // Contenedor del formulario con el estilo semitransparente de tu CSS
+        Card(
+            modifier = Modifier.fillMaxWidth(0.9f),
+            colors = CardDefaults.cardColors(containerColor = DarkGrayBackground.copy(alpha = 0.85f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
-            if (loginState == LoginState.Loading) {
-                CircularProgressIndicator(modifier = Modifier.size(20.dp))
-            } else {
-                Text("Ingresar")
-            }
-        }
+            Column(
+                modifier = Modifier.padding(30.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(15.dp)
+            ) {
+                // Logo
+                Image(
+                    painter = painterResource(id = R.drawable.portada_r_d),
+                    contentDescription = "Logo TCG",
+                    modifier = Modifier.size(150.dp)
+                )
 
-        Spacer(modifier = Modifier.height(16.dp))
+                Text("Realms in Discord TCG", fontSize = 24.sp, color = TealAccent, fontWeight = FontWeight.Bold)
 
-        TextButton(onClick = onNavigateToRegister) {
-            Text("¿No tienes cuenta? Regístrate YA")
-        }
+                // Campo de Usuario
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Usuario", color = Color.White.copy(alpha = 0.7f)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-        // Navegar automáticamente al éxito
-        LaunchedEffect(loginState) {
-            if (loginState == LoginState.Success) {
-                onLoginSuccess(username)
+                // Campo de Contraseña
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Contraseña", color = Color.White.copy(alpha = 0.7f)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Mensaje de Error
+                if (uiState.error != null) {
+                    Text(text = uiState.error!!, color = Color.Red, style = MaterialTheme.typography.bodySmall)
+                }
+
+                // Botón de Ingresar
+                Button(
+                    onClick = { viewModel.login(username, password) },
+                    enabled = !uiState.isLoading,
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = TealAccent)
+                ) {
+                    Text(if (uiState.isLoading) "Cargando..." else "INGRESAR", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+
+                // Enlace a Registro
+                Text("¿No tienes cuenta? Regístrate",
+                    color = TealAccent,
+                    modifier = Modifier.clickable { onNavigateToRegister() }
+                )
             }
         }
     }
