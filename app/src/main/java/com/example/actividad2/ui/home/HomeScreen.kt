@@ -161,7 +161,7 @@ fun HomeScreen(
                         }
                     }
 
-                    // SECCIÓN MEDIA (Podrías agregar más contenido aquí)
+                    // SECCIÓN MEDIA
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -225,7 +225,6 @@ fun HomeScreen(
     }
 }
 
-// COMPONENTE REUTILIZABLE PARA BOTONES DE NAVBAR
 @Composable
 fun NavBarButton(text: String, onClick: () -> Unit) {
     Text(

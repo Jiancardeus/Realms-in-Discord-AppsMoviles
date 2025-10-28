@@ -37,7 +37,6 @@ fun LoginScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Imagen de fondo NUEVA
         Image(
             painter = painterResource(id = R.drawable.my_app_icon),
             contentDescription = "App Background",
@@ -52,7 +51,7 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Contenedor del formulario con el estilo semitransparente de tu CSS
+            // Contenedor del formulario con el estilo semitransparente
             Card(
                 modifier = Modifier.fillMaxWidth(0.9f),
                 colors = CardDefaults.cardColors(containerColor = DarkGrayBackground.copy(alpha = 0.85f)),
@@ -105,7 +104,7 @@ fun LoginScreen(
                         Text(if (uiState.isLoading) "Cargando..." else "INGRESAR", color = Color.Black, fontWeight = FontWeight.Bold)
                     }
 
-                    // Enlace a Registro - ¡SE MANTIENE INTACTO!
+                    // Enlace a Registro
                     Text("¿No tienes cuenta? Regístrate",
                         color = TealAccent,
                         modifier = Modifier.clickable { onNavigateToRegister() }

@@ -53,7 +53,6 @@ fun RegisterScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Contenedor principal con el mismo estilo de Login
             Card(
                 modifier = Modifier.fillMaxWidth(0.9f),
                 colors = CardDefaults.cardColors(containerColor = DarkGrayBackground.copy(alpha = 0.85f)),
@@ -73,7 +72,7 @@ fun RegisterScreen(
 
                     Text("Crear Cuenta TCG", fontSize = 24.sp, color = TealAccent, fontWeight = FontWeight.Bold)
 
-                    // 1. Campo de Email (NUEVO)
+                    // 1. Campo de Email
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
