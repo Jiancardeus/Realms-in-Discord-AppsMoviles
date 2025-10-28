@@ -52,6 +52,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.foundation.layout)
     // Definición de versiones
     val room_version = "2.6.1"
     val hilt_version = "2.51.1"
