@@ -17,9 +17,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.actividad2.ui.home.HomeScreen
 import com.example.actividad2.ui.library.CardLibraryScreen
 import com.example.actividad2.ui.login.LoginScreen
-import com.example.actividad2.ui.login.LoginViewModel
+import com.example.actividad2.data.model.LoginViewModel
 import com.example.actividad2.ui.register.RegisterScreen
-import com.example.actividad2.ui.register.RegisterViewModel
+import com.example.actividad2.data.model.RegisterViewModel
 import com.example.actividad2.ui.theme.Actividad2Theme
 import dagger.hilt.android.AndroidEntryPoint
 

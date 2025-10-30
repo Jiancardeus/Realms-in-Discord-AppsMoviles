@@ -1,9 +1,8 @@
-package com.example.actividad2.ui.library
+package com.example.actividad2.data.model
 
 import android.content.Context // Necesario para acceder a los recursos (R.drawable)
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.actividad2.data.model.Card // Modelo interno
 import com.example.actividad2.data.remote.model.CardModel // Modelo de la red
 import com.example.actividad2.domain.repository.ICardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -76,7 +75,7 @@ class LibraryViewModel @Inject constructor(
 // FUNCIÓN DE MAPEO Y CONVERSIÓN DE IMAGEN (De Modelo de Red a Modelo de Dominio)
 // Esta función resuelve el error de Resource ID #0x0 (recurso no encontrado)
 
-fun com.example.actividad2.data.remote.model.CardModel.toDomain(context: Context): Card {
+fun CardModel.toDomain(context: Context): Card {
 
     // Convertir el nombre del archivo (ej: "espadachin_solar.png") al ID de recurso de Android (R.drawable.espadachin_solar)
     val resourceName = this.imageUrl.substringBeforeLast(".") // Obtiene "espadachin_solar"

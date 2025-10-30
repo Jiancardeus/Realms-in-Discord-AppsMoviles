@@ -1,57 +1,117 @@
 package com.example.actividad2.ui.login
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.actividad2.domain.useCase.LoginUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import javax.inject.Inject
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.actividad2.R // Importar recursos (drawable/mipmap)
+import com.example.actividad2.data.model.LoginViewModel
+import com.example.actividad2.ui.theme.DarkGrayBackground
+import com.example.actividad2.ui.theme.TealAccent // Colores de ejemplo
 
-// Clase de estado para la UI (Maneja lo que la vista debe mostrar)
-data class LoginUiState(
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val isAuthenticated: Boolean = false
-)
+@Composable
+fun LoginScreen(
+    viewModel: LoginViewModel,
+    onLoginSuccess: (username: String) -> Unit,
+    onNavigateToRegister: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
-@HiltViewModel
-class LoginViewModel @Inject constructor(
-    private val loginUseCase: LoginUseCase
-) : ViewModel() {
+    // Reacciona al estado de autenticación exitosa
+    if (uiState.isAuthenticated) {
+        onLoginSuccess(username)
+    }
 
-    // 1. DECLARACIÓN DEL ESTADO INTERNO (MutableStateFlow)
-    private val _uiState = MutableStateFlow(LoginUiState())
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.my_app_icon),
+            contentDescription = "App Background",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
 
-    // 2. DECLARACIÓN DEL ESTADO PÚBLICO (StateFlow - Solo lectura)
-    val uiState: StateFlow<LoginUiState> = _uiState
-
-    fun login(username: String, password: String) {
-        // Ahora _uiState está definido y puede usarse.
-        if (_uiState.value.isLoading) return
-
-        _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-
-        viewModelScope.launch {
-            when (val result = loginUseCase(username, password)) {
-                is LoginUseCase.LoginResult.Success -> {
-                    // Login Exitoso
-                    _uiState.value = _uiState.value.copy(
-                        isAuthenticated = true,
-                        isLoading = false
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Contenedor del formulario con el estilo semitransparente
+            Card(
+                modifier = Modifier.fillMaxWidth(0.9f),
+                colors = CardDefaults.cardColors(containerColor = DarkGrayBackground.copy(alpha = 0.85f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(30.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(15.dp)
+                ) {
+                    // Logo
+                    Image(
+                        painter = painterResource(id = R.drawable.portada_r_d),
+                        contentDescription = "Logo TCG",
+                        modifier = Modifier.size(150.dp)
                     )
-                }
-                is LoginUseCase.LoginResult.Error -> {
-                    // Login Fallido (manejo de errores de credenciales o conexión)
-                    _uiState.value = _uiState.value.copy(
-                        error = result.message,
-                        isLoading = false
+
+                    Text("Realms in Discord TCG", fontSize = 24.sp, color = TealAccent, fontWeight = FontWeight.Bold)
+
+                    // Campo de Usuario
+                    OutlinedTextField(
+                        value = username,
+                        onValueChange = { username = it },
+                        label = { Text("Usuario", color = Color.White.copy(alpha = 0.7f)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    // Campo de Contraseña
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Contraseña", color = Color.White.copy(alpha = 0.7f)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    // Mensaje de Error
+                    if (uiState.error != null) {
+                        Text(text = uiState.error!!, color = Color.Red, style = MaterialTheme.typography.bodySmall)
+                    }
+
+                    // Botón de Ingresar
+                    Button(
+                        onClick = { viewModel.login(username, password) },
+                        enabled = !uiState.isLoading,
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = TealAccent)
+                    ) {
+                        Text(if (uiState.isLoading) "Cargando..." else "INGRESAR", color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+
+                    // Enlace a Registro
+                    Text("¿No tienes cuenta? Regístrate",
+                        color = TealAccent,
+                        modifier = Modifier.clickable { onNavigateToRegister() }
                     )
                 }
             }
         }
     }
-
 }
-
