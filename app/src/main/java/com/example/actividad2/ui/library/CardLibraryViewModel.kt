@@ -1,101 +1,89 @@
 package com.example.actividad2.ui.library
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import com.example.actividad2.data.model.LibraryViewModel
-import com.example.actividad2.ui.theme.DarkerBackground
+import android.content.Context
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.actividad2.data.model.Card
+import com.example.actividad2.domain.repository.ICardRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-@Composable
-fun CardLibraryScreen(
-    navController: NavController,
-    viewModel: LibraryViewModel = hiltViewModel()
-) {
-    val uiState by viewModel.uiState.collectAsState()
+data class LibraryUiState(
+    val cards: List<Card> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val currentFactionFilter: String = "Todas"
+)
 
-    // El filtro actual se obtiene del ViewModel
-    val selectedFaction = uiState.currentFactionFilter
-    val isFilterActive = selectedFaction != "Todas"
+@HiltViewModel
+class CardLibraryViewModel @Inject constructor(
+    private val cardRepository: ICardRepository,
+    @ApplicationContext private val context: Context
+) : ViewModel() {
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DarkerBackground) // Fondo principal
-            .padding(top = 60.dp) // Espacio para la Navbar, si no es flotante
-    ) {
+    private val _uiState = MutableStateFlow(LibraryUiState())
+    val uiState: StateFlow<LibraryUiState> = _uiState
 
-        // --- 1. Selector de Facciones ---
-        // Asumo que tu FactionSelector está aquí
-        FactionSelectorScreen(
-            currentFaction = selectedFaction,
-            onSelectFaction = { faction -> viewModel.setFactionFilter(faction) },
-            // Permite volver al selector de facciones si se selecciona "Todas" inicialmente.
-            onGoBack = { viewModel.setFactionFilter("Todas") }
-        )
+    init {
+        loadCards()
+    }
 
-        // --- 2. Contenedor de la Lista y Scroll ---
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .weight(1f) // Ocupa el resto del espacio
-        ) {
-            when {
-                // A. Muestra el estado de CARGA
-                uiState.isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
+    fun loadCards() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
 
-                // B. Muestra el estado de ERROR
-                uiState.error != null -> {
-                    Text(
-                        text = "Error: ${uiState.error}",
-                        color = Color.Red,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+            val result = cardRepository.getAllCards()
 
-                // C. Muestra el estado VACÍO
-                uiState.cards.isEmpty() && !uiState.isLoading -> {
-                    Text(
-                        text = "No se encontraron cartas de $selectedFaction.",
-                        color = Color.LightGray,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-
-                // D. Muestra el GRID de Cartas (El caso de éxito)
-                else -> {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(uiState.cards, key = { it.id }) { card ->
-                            CardItem(card = card)
-                        }
+            result.fold(
+                onSuccess = { cardModels ->
+                    // Convertir CardModel a Card
+                    val allCards = cardModels.map { cardModel ->
+                        Card(
+                            id = cardModel.mongoId,
+                            name = cardModel.name,
+                            cost = cardModel.cost,
+                            attack = cardModel.attack,
+                            health = cardModel.health,
+                            type = cardModel.type,
+                            faction = cardModel.faction,
+                            description = cardModel.description,
+                            imageResId = getImageResourceId(cardModel.imageUrl)
+                        )
                     }
+
+                    val filter = _uiState.value.currentFactionFilter
+                    val loadedCards = if (filter == "Todas") {
+                        allCards
+                    } else {
+                        allCards.filter { it.faction == filter }
+                    }
+
+                    _uiState.update { it.copy(cards = loadedCards, isLoading = false, error = null) }
+                },
+                onFailure = { throwable ->
+                    _uiState.update { it.copy(error = "Error al cargar cartas: ${throwable.message}", isLoading = false) }
                 }
-            }
+            )
         }
+    }
+
+    // Función auxiliar para convertir imageUrl a resourceId
+    private fun getImageResourceId(imageUrl: String): Int {
+        val resourceName = imageUrl.substringBeforeLast(".")
+        return context.resources.getIdentifier(
+            resourceName,
+            "drawable",
+            context.packageName
+        )
+    }
+
+    fun setFactionFilter(faction: String) {
+        _uiState.update { it.copy(currentFactionFilter = faction) }
+        loadCards()
     }
 }

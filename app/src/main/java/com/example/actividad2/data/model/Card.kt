@@ -1,6 +1,11 @@
 package com.example.actividad2.data.model
 
-data class Card (
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "cards")
+data class Card(
+    @PrimaryKey
     val id: String,
     val name: String,
     val cost: Int,
@@ -10,5 +15,4 @@ data class Card (
     val faction: String,
     val description: String,
     val imageResId: Int
-
 )

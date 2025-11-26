@@ -3,11 +3,14 @@ package com.example.actividad2.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.example.actividad2.data.model.User
+import com.example.actividad2.data.model.Card // AÑADIR ESTA IMPORTACIÓN
 
-// Lista de entidades y versión
-@Database(entities = [User::class], version = 1, exportSchema = false)
+@Database(
+    entities = [User::class, Card::class], // AÑADIR Card::class aquí
+    version = 2, // Incrementar versión por el cambio
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
-
-    // Define los Data Access Objects (DAOs) que Room debe implementar
     abstract fun userDao(): UserDao
+    abstract fun cardDao(): CardDao // AÑADIR este método
 }

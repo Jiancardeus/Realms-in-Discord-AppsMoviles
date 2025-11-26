@@ -16,9 +16,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.actividad2.ui.home.HomeScreen
 import com.example.actividad2.ui.library.CardLibraryScreen
-import com.example.actividad2.ui.login.LoginScreen
+import com.example.actividad2.ui.login.LoginScreen // AÑADIDO
 import com.example.actividad2.data.model.LoginViewModel
-import com.example.actividad2.ui.register.RegisterScreen
+import com.example.actividad2.ui.register.RegisterScreen // AÑADIDO
 import com.example.actividad2.data.model.RegisterViewModel
 import com.example.actividad2.ui.theme.Actividad2Theme
 import dagger.hilt.android.AndroidEntryPoint
@@ -45,11 +45,9 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
 
-                    // Observar el destino actual para cambiar la orientación
                     val currentDestination by navController.currentBackStackEntryAsState()
                     val currentRoute = currentDestination?.destination?.route
 
-                    // Forzar landscape solo en Home, portrait en las demás pantallas
                     when (currentRoute) {
                         Screen.HOME -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                         else -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -59,15 +57,12 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = Screen.LOGIN
                     ) {
-                        // --- 1. Pantalla de LOGIN ---
                         composable(Screen.LOGIN) {
                             val viewModel: LoginViewModel = hiltViewModel()
-                            LoginScreen(
+                            LoginScreen( // MODIFICADO - usar LoginScreen correcto
                                 viewModel = viewModel,
                                 onLoginSuccess = {
-                                    // Navegación al Home después del éxito
                                     navController.navigate(Screen.HOME) {
-                                        // Evita que el usuario regrese a Login con el botón Atrás
                                         popUpTo(Screen.LOGIN) { inclusive = true }
                                     }
                                 },
@@ -75,27 +70,22 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // --- 2. Pantalla de REGISTRO ---
                         composable(Screen.REGISTER) {
                             val viewModel: RegisterViewModel = hiltViewModel()
-                            RegisterScreen(
+                            RegisterScreen( // MODIFICADO - usar RegisterScreen correcto
                                 viewModel = viewModel,
                                 onRegistrationSuccess = { username ->
-                                    // Navegación al Home después del éxito
                                     navController.navigate(Screen.HOME) {
                                         popUpTo(Screen.LOGIN) { inclusive = true }
                                     }
                                 },
-                                // El parámetro 'onNavigateToLogin' es el requerido
                                 onNavigateToLogin = { navController.popBackStack() }
                             )
                         }
 
-                        // --- 3. Pantalla de HOME (Contenedor Principal) ---
                         composable(Screen.HOME) {
                             HomeScreen(
                                 onLogout = {
-                                    // Al hacer Logout, vuelve al Login
                                     navController.navigate(Screen.LOGIN) {
                                         popUpTo(Screen.HOME) { inclusive = true }
                                     }
@@ -106,23 +96,18 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // --- 4. Pantalla de BIBLIOTECA ---
                         composable(Screen.LIBRARY) {
                             CardLibraryScreen(navController = navController)
                         }
 
-                        // --- 5. Pantalla de MAZOS (Nueva) ---
                         composable(Screen.DECKS) {
-                            // Placeholder - Aquí irá tu pantalla de Mazos
                             androidx.compose.material3.Text(
                                 "Pantalla de Mazos - En desarrollo",
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
 
-                        // --- 6. Pantalla de JUGAR (Nueva) ---
                         composable(Screen.PLAY) {
-                            // Placeholder - Aquí irá tu pantalla de Jugar
                             androidx.compose.material3.Text(
                                 "Pantalla de Jugar - En desarrollo",
                                 modifier = Modifier.fillMaxSize()
