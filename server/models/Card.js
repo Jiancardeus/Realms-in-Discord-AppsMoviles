@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
-
 const CardSchema = new mongoose.Schema({
-    // Utilizamos el nombre de la carta como identificador unico
     id: {
         type: String,
         required: true,
@@ -11,22 +9,33 @@ const CardSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    type: { // Héroe, Tropa
-        type: String,
+    cost: {
+        type: Number,
         required: true,
-    },
-    description: {
-        type: String,
+        default: 0
     },
     attack: {
         type: Number,
         default: 0
     },
-    defense: {
+    health: {
         type: Number,
         default: 0
     },
-    imageUrl: { // Nombre del archivo de imagen (ej: "heroe_1_1.png")
+    type: {
+        type: String,
+        required: true,
+    },
+    faction: {
+        type: String,
+        required: true,
+        default: "Neutral"
+    },
+    description: {
+        type: String,
+        default: "Sin descripción"
+    },
+    imageUrl: {
         type: String,
         required: true,
     }

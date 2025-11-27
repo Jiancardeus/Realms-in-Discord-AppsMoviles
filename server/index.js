@@ -15,11 +15,27 @@ app.use(express.json());
 
 // --- Conexión a MongoDB Atlas ---
 // Esta es tu URL de conexión real, la dejamos aquí.
-const MONGODB_URI = 'mongodb+srv://app_admin:app123@app.w280lxg.mongodb.net/?appName=app';
+const MONGODB_URI = 'mongodb+srv://admin_jian:jiandios@app.w280lxg.mongodb.net/?appName=app';
+
+console.log("🔗 Conectando a MongoDB...");
 
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ Conectado a MongoDB Atlas'))
-  .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
+  .then(() => {
+    console.log('✅ Conectado a MongoDB Atlas');
+
+    // Verificar conexión listando bases de datos
+    mongoose.connection.db.admin().listDatabases((err, result) => {
+      if (err) {
+        console.log('❌ Error listando databases:', err);
+      } else {
+        console.log('📊 Bases de datos disponibles:', result.databases.map(db => db.name));
+      }
+    });
+  })
+  .catch(err => {
+    console.error('❌ Error de conexión a MongoDB:', err);
+    console.error('🔍 Detalles:', err.message);
+  });
 
 // --- Integración de Rutas Modulares ---
 
@@ -36,5 +52,5 @@ app.get('/', (req, res) => {
 
 // --- Inicio del Servidor ---
 app.listen(PORT, () => {
-  console.log(`Servidor de backend corriendo en http://localhost:${PORT}`);
+  console.log(`🚀 Servidor de backend corriendo en http://localhost:${PORT}`);
 });
