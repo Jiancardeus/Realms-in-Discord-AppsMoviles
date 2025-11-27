@@ -1,5 +1,6 @@
 package com.example.actividad2.ui.library
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,8 +27,8 @@ class CardLibraryViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LibraryUiState())
-    val uiState: StateFlow<LibraryUiState> = _uiState
+    private val _uiState = MutableStateFlow(LibraryScreen())
+    val uiState: StateFlow<LibraryScreen> = _uiState
 
     init {
         loadCards()
@@ -73,6 +74,7 @@ class CardLibraryViewModel @Inject constructor(
     }
 
     // Función auxiliar para convertir imageUrl a resourceId
+    @SuppressLint("DiscouragedApi")
     private fun getImageResourceId(imageUrl: String): Int {
         val resourceName = imageUrl.substringBeforeLast(".")
         return context.resources.getIdentifier(

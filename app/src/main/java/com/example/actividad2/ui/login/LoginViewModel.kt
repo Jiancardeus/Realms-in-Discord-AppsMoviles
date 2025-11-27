@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.actividad2.R
-import com.example.actividad2.data.model.LoginViewModel
 import com.example.actividad2.ui.theme.DarkGrayBackground
 import com.example.actividad2.ui.theme.TealAccent
 

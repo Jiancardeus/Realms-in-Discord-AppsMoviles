@@ -1,7 +1,8 @@
-package com.example.actividad2.data.model
+package com.example.actividad2.ui.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.actividad2.data.model.User
 import com.example.actividad2.domain.useCase.RegisterUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

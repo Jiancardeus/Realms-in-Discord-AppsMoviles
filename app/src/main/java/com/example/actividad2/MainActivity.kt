@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -16,10 +17,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.actividad2.ui.home.HomeScreen
 import com.example.actividad2.ui.library.CardLibraryScreen
-import com.example.actividad2.ui.login.LoginScreen // AÑADIDO
-import com.example.actividad2.data.model.LoginViewModel
-import com.example.actividad2.ui.register.RegisterScreen // AÑADIDO
-import com.example.actividad2.data.model.RegisterViewModel
+import com.example.actividad2.ui.login.LoginScreen
+import com.example.actividad2.ui.login.LoginViewModel
+import com.example.actividad2.ui.register.RegisterScreen
+import com.example.actividad2.ui.register.RegisterViewModel
 import com.example.actividad2.ui.theme.Actividad2Theme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -48,9 +49,13 @@ class MainActivity : ComponentActivity() {
                     val currentDestination by navController.currentBackStackEntryAsState()
                     val currentRoute = currentDestination?.destination?.route
 
-                    when (currentRoute) {
-                        Screen.HOME -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                        else -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    // Corregir error de orientation
+                    LaunchedEffect(currentRoute) {
+                        val orientation = when (currentRoute) {
+                            Screen.HOME -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                            else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                        }
+                        requestedOrientation = orientation
                     }
 
                     NavHost(
@@ -59,7 +64,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable(Screen.LOGIN) {
                             val viewModel: LoginViewModel = hiltViewModel()
-                            LoginScreen( // MODIFICADO - usar LoginScreen correcto
+                            LoginScreen(
                                 viewModel = viewModel,
                                 onLoginSuccess = {
                                     navController.navigate(Screen.HOME) {
@@ -72,7 +77,7 @@ class MainActivity : ComponentActivity() {
 
                         composable(Screen.REGISTER) {
                             val viewModel: RegisterViewModel = hiltViewModel()
-                            RegisterScreen( // MODIFICADO - usar RegisterScreen correcto
+                            RegisterScreen(
                                 viewModel = viewModel,
                                 onRegistrationSuccess = { username ->
                                     navController.navigate(Screen.HOME) {

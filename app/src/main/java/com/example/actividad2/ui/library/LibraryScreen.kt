@@ -1,10 +1,10 @@
-package com.example.actividad2.data.model
+package com.example.actividad2.ui.library
 
 import android.content.Context
-import androidx.compose.material3.Card
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.actividad2.data.local.getInitialCards
+import com.example.actividad2.data.model.Card
 import com.example.actividad2.domain.repository.ICardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 // Clase de estado para la Biblioteca
-data class LibraryUiState(
+data class LibraryScreen(
     val cards: List<Card> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -28,8 +28,8 @@ class LibraryViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LibraryUiState())
-    val uiState: StateFlow<LibraryUiState> = _uiState
+    private val _uiState = MutableStateFlow(LibraryScreen())
+    val uiState: StateFlow<LibraryScreen> = _uiState
 
     init {
         loadCards()

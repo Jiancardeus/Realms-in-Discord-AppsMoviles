@@ -14,7 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.actividad2.R
-import com.example.actividad2.data.model.RegisterViewModel
 import com.example.actividad2.ui.theme.DarkGrayBackground
 import com.example.actividad2.ui.theme.TealAccent
 import com.example.actividad2.domain.useCase.RegisterUseCase

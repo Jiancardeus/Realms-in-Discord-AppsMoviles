@@ -16,7 +16,7 @@ app.use(express.json());
 
 // --- Conexión a MongoDB Atlas ---
 // Esta es tu URL de conexión real, la dejamos aquí.
-const MONGODB_URI = 'mongodb+srv://jiarivera_db_user:26w2JY2hmAqoiOID@cluster0.gcff5ze.mongodb.net/?appName=Cluster0';
+const MONGODB_URI = 'mongodb+srv://<app_admin>:<app123>@app.w280lxg.mongodb.net/?appName=app';
 
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ Conectado a MongoDB Atlas'))

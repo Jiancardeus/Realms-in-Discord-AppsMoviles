@@ -1,4 +1,4 @@
-package com.example.actividad2.data.model
+package com.example.actividad2.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
