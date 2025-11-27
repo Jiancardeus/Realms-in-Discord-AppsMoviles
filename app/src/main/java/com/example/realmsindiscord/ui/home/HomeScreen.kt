@@ -31,16 +31,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.realmsindiscord.R
+import com.example.realmsindiscord.data.model.User
+import com.example.realmsindiscord.ui.components.ProfileButton
 import com.example.realmsindiscord.ui.theme.TealAccent
+import com.example.realmsindiscord.viewmodel.profile.ProfileViewModel
 
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
     onNavigateToLibrary: () -> Unit,
     onNavigateToDecks: () -> Unit,
-    onNavigateToPlay: () -> Unit
+    onNavigateToPlay: () -> Unit,
+    onNavigateToProfileManagement: (User) -> Unit
 ) {
+    val profileViewModel: ProfileViewModel = hiltViewModel()
     val context = LocalContext.current
     val activity = context as? android.app.Activity
 
@@ -72,15 +78,14 @@ fun HomeScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // LOGO SUPERIOR
                 Column {
-                    Image(
-                        painter = painterResource(id = R.drawable.portada_r_d),
-                        contentDescription = "Logo",
-                        modifier = Modifier
-                            .size(80.dp)
-                            .padding(bottom = 30.dp)
+                    ProfileButton(
+                        viewModel = profileViewModel,
+                        onEditProfile = onNavigateToProfileManagement,
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
+
+                    // LOGO
 
                     // BOTONES DE NAVEGACIÓN
                     Column(

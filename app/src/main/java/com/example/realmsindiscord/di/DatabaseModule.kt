@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.realmsindiscord.data.local.AppDatabase
 import com.example.realmsindiscord.data.local.CardDao
+import com.example.realmsindiscord.data.local.SessionManager
 import com.example.realmsindiscord.data.local.UserDao
 import dagger.Module
 import dagger.Provides
@@ -31,4 +32,12 @@ object DatabaseModule {
 
     @Provides
     fun provideCardDao(db: AppDatabase): CardDao = db.cardDao()
+
+    @Provides
+    @Singleton
+    fun provideSessionManager(@ApplicationContext context: Context): SessionManager {
+        return SessionManager(context)
+    }
+
+
 }
