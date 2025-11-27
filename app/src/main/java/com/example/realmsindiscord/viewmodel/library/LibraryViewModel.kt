@@ -160,3 +160,4 @@ fun CardModel.toDomain(context: Context): Card {
         imageResId = imageId
     )
 }
+}
