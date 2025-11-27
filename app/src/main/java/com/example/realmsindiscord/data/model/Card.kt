@@ -12,7 +12,7 @@ data class Card(
     val attack: Int,
     val health: Int,
     val type: String,
-    val faction: String,
+    val faction: String? = "Neutral",
     val description: String,
     val imageResId: Int
 )
