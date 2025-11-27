@@ -23,6 +23,6 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindCardRepository(
-        cardRepositoryImpl: CardRepositoryImpl  // Hilt manejará la inyección automática
+        cardRepositoryImpl: CardRepositoryImpl
     ): ICardRepository
 }

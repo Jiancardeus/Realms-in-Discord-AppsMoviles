@@ -5,6 +5,7 @@ import com.example.realmsindiscord.data.local.getInitialCards
 import com.example.realmsindiscord.data.remote.api.CardApiService
 import com.example.realmsindiscord.data.remote.model.CardModel
 import com.example.realmsindiscord.domain.repository.ICardRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,7 +14,7 @@ import java.io.IOException
 
 class CardRepositoryImpl @Inject constructor(
     private val apiService: CardApiService,
-    private val context: Context  // ← AÑADIR Context como dependencia
+    @ApplicationContext private val context: Context  // ← AÑADIR @ApplicationContext
 ) : ICardRepository {
 
     override suspend fun getAllCards(): Result<List<CardModel>> = withContext(Dispatchers.IO) {

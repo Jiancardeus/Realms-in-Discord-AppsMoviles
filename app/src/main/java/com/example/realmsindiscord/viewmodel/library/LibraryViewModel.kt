@@ -79,35 +79,47 @@ class LibraryViewModel @Inject constructor(
             )
         }
 
-    fun loadCards() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+        fun loadCards() {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true) }
 
-            val filter = _uiState.value.currentFactionFilter
+                val filter = _uiState.value.currentFactionFilter
 
-            val result = cardRepository.getAllCards()
+                val result = cardRepository.getAllCards()
 
-            result.fold(
-                onSuccess = { cardModels ->
-                    println("✅ Cartas obtenidas de la API: ${cardModels.size}")
+                result.fold(
+                    onSuccess = { cardModels ->
+                        println("✅ Cartas obtenidas de la API: ${cardModels.size}")
 
-                    val allCards = cardModels.map { it.toDomain(context) }
-                    println("✅ Cartas mapeadas: ${allCards.size}")
+                        val allCards = cardModels.map { it.toDomain(context) }
+                        println("✅ Cartas mapeadas: ${allCards.size}")
 
-                    val loadedCards = if (filter == "Todas") {
-                        allCards
-                    } else {
-                        allCards.filter { it.faction == filter }
+                        val loadedCards = if (filter == "Todas") {
+                            allCards
+                        } else {
+                            allCards.filter { it.faction == filter }
+                        }
+
+                        _uiState.update {
+                            it.copy(
+                                cards = loadedCards,
+                                isLoading = false,
+                                error = null
+                            )
+                        }
+                        println("✅ Cartas cargadas en UI: ${loadedCards.size}")
+                    },
+                    onFailure = { throwable ->
+                        println("❌ Error al cargar cartas: ${throwable.message}")
+                        _uiState.update {
+                            it.copy(
+                                error = "Error al cargar cartas: ${throwable.message}",
+                                isLoading = false
+                            )
+                        }
                     }
-
-                    _uiState.update { it.copy(cards = loadedCards, isLoading = false, error = null) }
-                    println("✅ Cartas cargadas en UI: ${loadedCards.size}")
-                },
-                onFailure = { throwable ->
-                    println("❌ Error al cargar cartas: ${throwable.message}")
-                    _uiState.update { it.copy(error = "Error al cargar cartas: ${throwable.message}", isLoading = false) }
-                }
-            )
+                )
+            }
         }
     }
 
@@ -159,5 +171,4 @@ fun CardModel.toDomain(context: Context): Card {
         description = safeDescription,
         imageResId = imageId
     )
-}
 }
