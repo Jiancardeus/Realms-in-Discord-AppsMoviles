@@ -22,6 +22,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.realmsindiscord.data.model.User
+import com.example.realmsindiscord.ui.theme.TealAccent
 import com.example.realmsindiscord.viewmodel.profile.ProfileViewModel
 
 @Composable
@@ -133,13 +137,15 @@ fun ProfilePanel(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.width(320.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1E1E2E)
+        )
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(20.dp)
                 .fillMaxWidth()
         ) {
             // Header del perfil
@@ -149,18 +155,19 @@ fun ProfilePanel(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Perfil de Jugador",
+                    text = "👤 Perfil de Jugador",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Información del usuario - TODA LA SECCIÓN CLICKABLE
+            // Información del usuario
             UserInfoSection(user, onEditProfile)
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Estadísticas
             StatsSection(user)
@@ -173,78 +180,178 @@ fun UserInfoSection(
     user: User?,
     onEditProfile: () -> Unit
 ) {
-    // Hacer toda la sección clickable
-    Column(
-        modifier = Modifier
-            .clickable { onEditProfile() }
-            .fillMaxWidth()
-    ) {
-        Text(
-            text = "Información",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
+    var isExpanded by remember { mutableStateOf(true) }
 
-        Spacer(modifier = Modifier.height(8.dp))
+    Column {
+        // Header de Información como botón desplegable
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isExpanded = !isExpanded }
+                .padding(vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "📋 INFORMACIÓN",
+                style = MaterialTheme.typography.titleSmall,
+                color = TealAccent,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
 
-        // Información del usuario
-        InfoRow("Usuario", user?.username ?: "N/A")
-        InfoRow("Email", user?.email ?: "N/A")
-        InfoRow("Nivel", user?.level.toString())
+            // Ícono desplegable
+            Text(
+                text = if (isExpanded) "▲" else "▼",
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
 
-        // Agregar feedback visual al hacer click
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Toca para editar perfil →",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.align(Alignment.End)
-        )
+        // Contenido desplegable
+        if (isExpanded) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onEditProfile() }
+                    .background(
+                        color = Color(0xFF2D2D3D),
+                        shape = MaterialTheme.shapes.medium
+                    )
+                    .padding(16.dp)
+            ) {
+                // Información del usuario
+                InfoRow("👤 Usuario", user?.username ?: "N/A", Color.White, TealAccent)
+                InfoRow("📧 Email", user?.email ?: "N/A", TealAccent, TealAccent)
+                InfoRow("⭐ Nivel", user?.level?.toString() ?: "1", Color.White, TealAccent)
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Indicador de acción
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Editar perfil",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "→",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
+
+        // Línea divisoria
+        if (isExpanded) {
+            Spacer(modifier = Modifier.height(12.dp))
+        }
     }
 }
 
 @Composable
 fun StatsSection(user: User?) {
+    var isExpanded by remember { mutableStateOf(true) } // Expandido por defecto
+
     Column {
-        Text(
-            text = "Estadísticas",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        InfoRow("Victorias", user?.wins?.toString() ?: "0")
-        InfoRow("Derrotas", user?.losses?.toString() ?: "0")
-        InfoRow("Empates", user?.draws?.toString() ?: "0")
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Barra de progreso de experiencia
-        Text(
-            text = "Experiencia: ${user?.experience ?: 0}/${(user?.level ?: 1) * 1000}",
-            style = MaterialTheme.typography.bodySmall
-        )
-        LinearProgressIndicator(
-            progress = { (user?.experience?.toFloat() ?: 0f) / ((user?.level ?: 1) * 1000f) },
+        // Header de Estadísticas como botón desplegable
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(8.dp)
-        )
+                .clickable { isExpanded = !isExpanded }
+                .padding(vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "📊 ESTADÍSTICAS",
+                style = MaterialTheme.typography.titleSmall,
+                color = TealAccent,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+
+            Text(
+                text = if (isExpanded) "▲" else "▼",
+                color = TealAccent,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        // Contenido desplegable
+        if (isExpanded) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = Color(0xFF2D2D3D),
+                        shape = MaterialTheme.shapes.medium
+                    )
+                    .padding(16.dp)
+            ) {
+                InfoRow("✅ Victorias", user?.wins?.toString() ?: "0", Color.White, TealAccent)
+                InfoRow("❌ Derrotas", user?.losses?.toString() ?: "0", Color.White, TealAccent)
+                InfoRow("🤝 Empates", user?.draws?.toString() ?: "0", Color.White, TealAccent)
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Barra de progreso de experiencia con mejor contraste
+                Column {
+                    Text(
+                        text = "🎯 EXPERIENCIA",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "${user?.experience ?: 0}/${(user?.level ?: 1) * 1000}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TealAccent,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    LinearProgressIndicator(
+                        progress = { (user?.experience?.toFloat() ?: 0f) / ((user?.level ?: 1) * 1000f) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp),
+                        color = TealAccent,
+                        trackColor = Color(0xFF404050)
+                    )
+                }
+            }
+        }
     }
 }
 
 @Composable
-fun InfoRow(label: String, value: String) {
+fun InfoRow(label: String, value: String, labelColor: Color = Color.White, valueColor: Color = TealAccent) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = labelColor,
+            fontWeight = FontWeight.Medium
+        )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
+            color = valueColor,
             fontWeight = FontWeight.Bold
         )
     }
