@@ -51,6 +51,14 @@ fun HomeScreen(
     val context = LocalContext.current
     val activity = context as? android.app.Activity
 
+    // --- MODIFICACIÓN AGREGADA ---
+    // Forzar recarga del usuario cuando se abre la pantalla
+    LaunchedEffect(Unit) {
+        println("DEBUG: HomeScreen - Forzando recarga del usuario")
+        profileViewModel.loadCurrentUser()
+    }
+    // --- FIN DE MODIFICACIÓN ---
+
     LaunchedEffect(Unit) {
         activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
     }
@@ -81,7 +89,7 @@ fun HomeScreen(
             ) {
                 // CONTENIDO SUPERIOR DE LA NAVBAR
                 Column {
-                    // BOTÓN DE PERFIL CORREGIDO
+                    // BOTÓN DE PERFIL
                     ProfileButton(
                         viewModel = profileViewModel,
                         onEditProfile = { user ->

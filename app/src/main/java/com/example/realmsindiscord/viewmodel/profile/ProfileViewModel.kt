@@ -28,7 +28,15 @@ class ProfileViewModel @Inject constructor(
 
     fun loadCurrentUser() {
         viewModelScope.launch {
-            _userState.value = userRepository.getCurrentUser()
+            // Primero obtener el usuario por username desde SessionManager
+            val user = userRepository.getCurrentUser()
+            if (user != null) {
+                // Luego obtener el usuario completo por ID para tener todos los datos
+                val fullUser = userRepository.getUserById(user.id)
+                _userState.value = fullUser ?: user // Fallback al usuario básico
+            } else {
+                _userState.value = null
+            }
         }
     }
 

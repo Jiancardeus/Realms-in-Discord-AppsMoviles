@@ -34,11 +34,17 @@ import com.example.realmsindiscord.viewmodel.profile.ProfileViewModel
 @Composable
 fun ProfileButton(
     viewModel: ProfileViewModel,
-    onEditProfile: (User) -> Unit, // ✅ PARÁMETRO AÑADIDO
+    onEditProfile: (User) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val user by viewModel.userState.collectAsState()
     val isExpanded by viewModel.isProfileExpanded.collectAsState()
+
+    // --- MODIFICACIÓN AGREGADA ---
+    // Debug temporal
+    println("DEBUG: ProfileButton - user = $user")
+    println("DEBUG: ProfileButton - isExpanded = $isExpanded")
+    // --- FIN DE MODIFICACIÓN ---
 
     Box(modifier = modifier) {
         // Botón compacto del perfil
@@ -153,7 +159,7 @@ fun ProfilePanel(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Información del usuario - AHORA CLICKABLE
+            // Información del usuario - TODA LA SECCIÓN CLICKABLE
             UserInfoSection(user, onEditProfile)
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -169,21 +175,34 @@ fun UserInfoSection(
     user: User?,
     onEditProfile: () -> Unit
 ) {
-    Column {
+    // Hacer toda la sección clickable
+    Column(
+        modifier = Modifier
+            .clickable { onEditProfile() }
+            .fillMaxWidth()
+    ) {
         Text(
             text = "Información",
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier
-                .clickable { onEditProfile() }
-                .padding(vertical = 4.dp)
+            modifier = Modifier.padding(vertical = 4.dp)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Información del usuario
         InfoRow("Usuario", user?.username ?: "N/A")
         InfoRow("Email", user?.email ?: "N/A")
         InfoRow("Nivel", user?.level.toString())
+
+        // Agregar feedback visual al hacer click
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Toca para editar perfil →",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.align(Alignment.End)
+        )
     }
 }
 
