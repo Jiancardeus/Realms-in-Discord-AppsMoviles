@@ -119,7 +119,7 @@ class MainActivity : ComponentActivity() {
                             PlayScreen()
                         }
 
-                        // ✅ NUEVA PANTALLA: Gestión de Perfil
+                        // Gestión de Perfil
                         composable(
                             route = "${Screen.PROFILE_MANAGEMENT}/{userId}",
                             arguments = listOf(
@@ -127,10 +127,8 @@ class MainActivity : ComponentActivity() {
                             )
                         ) { backStackEntry ->
                             val userId = backStackEntry.arguments?.getInt("userId") ?: 0
-                            val viewModel: ProfileManagementViewModel = hiltViewModel()
 
-                            // En una implementación real, aquí obtendrías el usuario de la base de datos
-                            // Por ahora creamos un usuario temporal para probar
+
                             val tempUser = User(
                                 id = userId,
                                 username = "Usuario Temporal",
@@ -146,12 +144,11 @@ class MainActivity : ComponentActivity() {
                             ProfileManagementScreen(
                                 user = tempUser,
                                 onBack = { navController.popBackStack() },
-                                onAccountDeleted = {
+                                onLogout = {
                                     navController.navigate(Screen.LOGIN) {
                                         popUpTo(0) { inclusive = true }
                                     }
-                                },
-                                viewModel = viewModel
+                                }
                             )
                         }
                     }

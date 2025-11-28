@@ -118,6 +118,10 @@ class ProfileManagementViewModel @Inject constructor(
         }
     }
 
+    fun setUserDirectly(user: User) {
+        _userState.value = user
+        _state.value = _state.value.copy(isLoading = false, error = null)
+    }
     fun showDeleteConfirmation() {
         _state.value = _state.value.copy(showDeleteConfirmation = true)
     }
