@@ -1,12 +1,26 @@
+// En ui/register/RegisterScreen.kt - ACTUALIZAR COMPLETO:
 package com.example.realmsindiscord.ui.register
 
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.realmsindiscord.R
+import com.example.realmsindiscord.ui.common.DefaultErrorState
+import com.example.realmsindiscord.ui.common.DefaultLoadingState
 import com.example.realmsindiscord.ui.theme.DarkGrayBackground
 import com.example.realmsindiscord.ui.theme.TealAccent
 import com.example.realmsindiscord.viewmodel.register.RegisterViewModel
@@ -24,27 +40,20 @@ import com.example.realmsindiscord.viewmodel.register.RegisterViewModel
 @Composable
 fun RegisterScreen(
     viewModel: RegisterViewModel = hiltViewModel(),
-    onRegistrationSuccess: (username: String) -> Unit,
+    onRegistrationSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var username by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
 
-    if (uiState.registrationResult != null) {
-        LaunchedEffect(uiState.registrationResult) {
-            if (uiState.registrationResult.toString().contains("Success")) {
-                onRegistrationSuccess(username)
-                viewModel.resetState()
-            }
+    // Navegar al home cuando el registro es exitoso
+    LaunchedEffect(uiState.registerResource) {
+        if (uiState.registerResource.isSuccess) {
+            onRegistrationSuccess()
+            viewModel.resetState()
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Imagen de fondo
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.my_app_icon),
             contentDescription = "App Background",
@@ -78,58 +87,110 @@ fun RegisterScreen(
 
                     Text("Crear Cuenta TCG", fontSize = 24.sp, color = TealAccent, fontWeight = FontWeight.Bold)
 
-                    // 1. Campo de Email
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Correo Electrónico") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isLoading
-                    )
-
-                    // 2. Campo de Usuario
-                    OutlinedTextField(
-                        value = username,
-                        onValueChange = { username = it },
-                        label = { Text("Usuario") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isLoading
-                    )
-
-                    // 3. Campo de Contraseña
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Contraseña") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isLoading
-                    )
-
-                    // Mensaje de Error
-                    if (uiState.error != null) {
-                        Text(text = uiState.error!!, color = Color.Red, style = MaterialTheme.typography.bodySmall)
+                    // Manejo de estados
+                    when {
+                        uiState.registerResource.isLoading -> {
+                            DefaultLoadingState(
+                                message = "Creando cuenta...",
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        uiState.registerResource.isError -> {
+                            DefaultErrorState(
+                                message = uiState.registerResource.getOrNull()?.toString() ?: "Error desconocido",
+                                onRetry = { viewModel.register(uiState.username, uiState.email, uiState.password) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        else -> {
+                            // Formulario de registro
+                            RegisterForm(
+                                username = uiState.username,
+                                email = uiState.email,
+                                password = uiState.password,
+                                onUsernameChange = viewModel::updateUsername,
+                                onEmailChange = viewModel::updateEmail,
+                                onPasswordChange = viewModel::updatePassword,
+                                onRegister = { viewModel.register(uiState.username, uiState.email, uiState.password) },
+                                onNavigateToLogin = onNavigateToLogin,
+                                isLoading = uiState.registerResource.isLoading
+                            )
+                        }
                     }
-
-                    // Botón de Registro
-                    Button(
-                        onClick = { viewModel.register(username, email, password) },
-                        enabled = !uiState.isLoading && username.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = TealAccent)
-                    ) {
-                        Text(if (uiState.isLoading) "Registrando..." else "REGISTRARSE", color = Color.Black, fontWeight = FontWeight.Bold)
-                    }
-
-                    // Enlace a Login
-                    Text("¿Ya tienes cuenta? Inicia Sesión",
-                        color = TealAccent,
-                        modifier = Modifier.clickable { onNavigateToLogin() }
-                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun RegisterForm(
+    username: String,
+    email: String,
+    password: String,
+    onUsernameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onRegister: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    isLoading: Boolean
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(15.dp)
+    ) {
+        // Campo de Email
+        OutlinedTextField(
+            value = email,
+            onValueChange = onEmailChange,
+            label = { Text("Correo Electrónico") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading
+        )
+
+        // Campo de Usuario
+        OutlinedTextField(
+            value = username,
+            onValueChange = onUsernameChange,
+            label = { Text("Usuario") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading
+        )
+
+        // Campo de Contraseña
+        OutlinedTextField(
+            value = password,
+            onValueChange = onPasswordChange,
+            label = { Text("Contraseña") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isLoading
+        )
+
+        // Botón de Registro
+        Button(
+            onClick = onRegister,
+            enabled = !isLoading && username.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = TealAccent)
+        ) {
+            Text(
+                text = if (isLoading) "Registrando..." else "REGISTRARSE",
+                color = Color.Black,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        // Enlace a Login
+        Text(
+            text = "¿Ya tienes cuenta? Inicia Sesión",
+            color = TealAccent,
+            modifier = Modifier
+                .clickable { onNavigateToLogin() }
+                .align(Alignment.CenterHorizontally)
+        )
     }
 }

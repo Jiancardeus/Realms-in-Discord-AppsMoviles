@@ -9,16 +9,9 @@ import retrofit2.HttpException
 class RegisterUseCase @Inject constructor(
     private val apiService: AuthApiService
 ) {
-    sealed class RegisterResult {
-        object Success : RegisterResult()
-        object UsernameTaken : RegisterResult()
-        object EmailTaken : RegisterResult()
-        data class Error(val message: String) : RegisterResult()
-    }
-
-    suspend operator fun invoke(user: User): RegisterResult {
+    suspend operator fun invoke(username: String, email: String, password: String): RegisterResult {
         return try {
-            val request = RegisterRequest(user.username, user.email, user.passwordHash)
+            val request = RegisterRequest(username, email, password)
             val response = apiService.register(request)
 
             if (response.message.contains("registrado")) {
@@ -28,15 +21,20 @@ class RegisterUseCase @Inject constructor(
             }
         } catch (e: HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            if (errorBody?.contains("duplicate key error") == true || errorBody?.contains("username") == true) {
-                return RegisterResult.UsernameTaken
+            when {
+                errorBody?.contains("username") == true -> RegisterResult.UsernameTaken
+                errorBody?.contains("email") == true -> RegisterResult.EmailTaken
+                else -> RegisterResult.Error("Error de servidor: ${e.code()}")
             }
-            if (errorBody?.contains("email") == true) {
-                return RegisterResult.EmailTaken
-            }
-            RegisterResult.Error("Error de servidor: ${e.code()}")
         } catch (e: Exception) {
             RegisterResult.Error("Error de conexión: ${e.message}")
         }
+    }
+
+    sealed class RegisterResult {
+        object Success : RegisterResult()
+        object UsernameTaken : RegisterResult()
+        object EmailTaken : RegisterResult()
+        data class Error(val message: String) : RegisterResult()
     }
 }

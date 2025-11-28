@@ -81,7 +81,8 @@ class MainActivity : ComponentActivity() {
                             val viewModel: RegisterViewModel = hiltViewModel()
                             RegisterScreen(
                                 viewModel = viewModel,
-                                onRegistrationSuccess = { username ->
+                                onRegistrationSuccess = {
+                                    // Eliminar el parámetro username ya que no se usa más
                                     navController.navigate(Screen.HOME) {
                                         popUpTo(Screen.LOGIN) { inclusive = true }
                                     }
