@@ -1,4 +1,3 @@
-// En viewmodel/register/RegisterViewModel.kt - REFACTORIZAR:
 package com.example.realmsindiscord.viewmodel.register
 
 import androidx.lifecycle.ViewModel
