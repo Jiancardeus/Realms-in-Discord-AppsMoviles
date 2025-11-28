@@ -121,7 +121,7 @@ private fun FactionFilterRow(
     selectedFaction: String?,
     onFactionSelect: (String?) -> Unit
 ) {
-    val factions = listOf("Todas", "Fire", "Water", "Earth", "Air", "Neutral")
+    val factions = listOf("Todas", "Solares", "Corrupcion", "Earth", "Air", "Neutral")
 
     Row(
         modifier = Modifier.fillMaxWidth(),

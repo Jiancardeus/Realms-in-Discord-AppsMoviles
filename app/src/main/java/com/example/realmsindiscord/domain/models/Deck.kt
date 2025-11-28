@@ -20,10 +20,10 @@ data class DeckCard(
 
 // Reglas del juego
 object DeckRules {
-    const val MIN_DECK_SIZE = 25
-    const val MAX_DECK_SIZE = 30
-    const val MAX_COPIES_PER_CARD = 2
-    const val MAX_SAME_FACTION_CARDS = 15
+    const val MIN_DECK_SIZE = 22
+    const val MAX_DECK_SIZE = 22
+    const val MAX_COPIES_PER_CARD = 3
+    const val MAX_SAME_FACTION_CARDS = 22
 }
 
 data class DeckValidationResult(

@@ -51,7 +51,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.compose.foundation)
-
+    implementation("io.coil-kt:coil-compose:2.4.0")
     val room_version = "2.6.1"
     val hilt_version = "2.51.1"
     val retrofit_version = "2.9.0"
