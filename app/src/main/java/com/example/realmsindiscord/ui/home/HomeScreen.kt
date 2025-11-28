@@ -79,7 +79,18 @@ fun HomeScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                // CONTENIDO SUPERIOR DE LA NAVBAR
+                Column {
+                    // BOTÓN DE PERFIL CORREGIDO
+                    ProfileButton(
+                        viewModel = profileViewModel,
+                        onEditProfile = { user ->
+                            onNavigateToProfileManagement(user)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
+                    Spacer(modifier = Modifier.height(32.dp))
 
                     // BOTONES DE NAVEGACIÓN
                     Column(
@@ -209,7 +220,7 @@ fun HomeScreen(
             }
         }
     }
-
+}
 
 @Composable
 fun NavBarButton(text: String, onClick: () -> Unit) {
