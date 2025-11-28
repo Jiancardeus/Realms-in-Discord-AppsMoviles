@@ -3,13 +3,13 @@ package com.example.realmsindiscord.domain.usecase
 import com.example.realmsindiscord.data.model.User
 import com.example.realmsindiscord.data.remote.api.AuthApiService
 import com.example.realmsindiscord.data.remote.request.LoginRequest
-import com.example.realmsindiscord.data.repository.UserRepository
+import com.example.realmsindiscord.data.repository.UserRepositoryImpl
 import javax.inject.Inject
 import retrofit2.HttpException
 
 class LoginUseCase @Inject constructor(
     private val apiService: AuthApiService,
-    private val userRepository: UserRepository
+    private val userRepositoryImpl: UserRepositoryImpl
 ) {
     sealed class LoginResult {
         data class Success(val user: User) : LoginResult()
@@ -33,7 +33,7 @@ class LoginUseCase @Inject constructor(
                     losses = 0,
                     draws = 0
                 )
-                userRepository.saveUserLocally(user)
+                userRepositoryImpl.saveUserLocally(user)
                 LoginResult.Success(user)
             } else {
                 LoginResult.Error("Usuario o contraseña incorrectos.")

@@ -34,9 +34,4 @@ object DatabaseModule {
     @Provides
     fun provideCardDao(db: AppDatabase): CardDao = db.cardDao()
 
-    @Provides
-    @Singleton
-    fun provideSessionManager(@ApplicationContext context: Context): SessionManager {
-        return SessionManager(context)
-    }
 }

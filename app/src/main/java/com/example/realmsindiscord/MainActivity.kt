@@ -17,16 +17,15 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.realmsindiscord.data.model.User
+import com.example.realmsindiscord.ui.library.CardLibraryScreen
 import com.example.realmsindiscord.ui.deck.DeckBuilderScreen
 import com.example.realmsindiscord.ui.home.HomeScreen
-import com.example.realmsindiscord.ui.library.CardLibraryScreen
 import com.example.realmsindiscord.ui.login.LoginScreen
 import com.example.realmsindiscord.ui.play.PlayScreen
 import com.example.realmsindiscord.ui.profile.ProfileManagementScreen
 import com.example.realmsindiscord.ui.register.RegisterScreen
 import com.example.realmsindiscord.ui.theme.RealmsInDiscordTheme
 import com.example.realmsindiscord.viewmodel.login.LoginViewModel
-import com.example.realmsindiscord.viewmodel.profile.ProfileManagementViewModel
 import com.example.realmsindiscord.viewmodel.register.RegisterViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -109,11 +108,19 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(Screen.LIBRARY) {
-                            CardLibraryScreen(navController = navController)
+                            CardLibraryScreen(
+                                onBack = { navController.popBackStack() }
+                            )
                         }
 
                         composable(Screen.DECKS) {
-                            DeckBuilderScreen()
+                            DeckBuilderScreen(
+                                onBack = { navController.popBackStack() },
+                                onSave = {
+                                    // Opcional: mostrar mensaje de éxito
+                                    navController.popBackStack()
+                                }
+                            )
                         }
 
                         composable(Screen.PLAY) {

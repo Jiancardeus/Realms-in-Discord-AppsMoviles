@@ -1,5 +1,6 @@
 package com.example.realmsindiscord.data.repository
 
+import android.se.omapi.Session
 import com.example.realmsindiscord.data.local.SessionManager
 import com.example.realmsindiscord.data.local.UserDao
 import com.example.realmsindiscord.data.remote.api.AuthApiService
@@ -14,11 +15,11 @@ import javax.inject.Singleton
 import retrofit2.HttpException
 
 @Singleton
-class UserRepository @Inject constructor(
+class UserRepositoryImpl @Inject constructor(
     private val apiService: AuthApiService,
+    private val sessionManager: SessionManager,
     @Named("userMicroservice") private val microserviceApi: AuthApiService, // Nuevo: microservicio
     private val userDao: UserDao,
-    private val sessionManager: SessionManager
 ) : IUserRepository {
 
 

@@ -59,7 +59,7 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _microserviceStatus.value = "🔍 Probando login en microservicio..."
             try {
-                val repository = userRepository as com.example.realmsindiscord.data.repository.UserRepository
+                val repository = userRepository as com.example.realmsindiscord.data.repository.UserRepositoryImpl
                 val isWorking = repository.testMicroservice()
 
                 if (isWorking) {

@@ -1,135 +1,88 @@
-// En viewmodel/library/LibraryViewModel.kt - VERIFICAR que tenga esto:
 package com.example.realmsindiscord.viewmodel.library
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.realmsindiscord.data.model.Card
-import com.example.realmsindiscord.data.remote.model.CardModel
-import com.example.realmsindiscord.domain.models.Resource
 import com.example.realmsindiscord.domain.repository.ICardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class LibraryUiState(
-    val cardsResource: Resource<List<Card>> = Resource.Idle,
-    val currentFactionFilter: String = "Todas"
+data class LibraryState(
+    val isLoading: Boolean = false,
+    val cards: List<com.example.realmsindiscord.data.remote.model.CardModel> = emptyList(),
+    val filteredCards: List<com.example.realmsindiscord.data.remote.model.CardModel> = emptyList(),
+    val selectedFaction: String? = null,
+    val searchQuery: String = "",
+    val error: String? = null
 )
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    private val cardRepository: ICardRepository,
-    @ApplicationContext private val context: Context
+    private val cardRepository: ICardRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LibraryUiState())
-    val uiState: StateFlow<LibraryUiState> = _uiState
+    private val _state = MutableStateFlow(LibraryState())
+    val state: StateFlow<LibraryState> = _state.asStateFlow()
 
     init {
-        println("🔄 LibraryViewModel inicializado")
         loadCards()
     }
 
     fun loadCards() {
+        _state.value = _state.value.copy(isLoading = true)
+
         viewModelScope.launch {
-            _uiState.update { it.copy(cardsResource = Resource.Loading) }
-
-            val filter = _uiState.value.currentFactionFilter
-            println("🎯 Cargando cartas con filtro: $filter")
-
-            val result = cardRepository.getAllCards()
-
-            result.fold(
-                onSuccess = { cardModels ->
-                    println("✅ Cartas obtenidas del repositorio: ${cardModels.size}")
-
-                    val allCards = cardModels.map { it.toDomain(context) }
-                    println("✅ Cartas mapeadas al dominio: ${allCards.size}")
-
-                    val loadedCards = if (filter == "Todas") {
-                        allCards
-                    } else {
-                        allCards.filter { it.faction == filter }
-                    }
-
-                    println("🎲 Cartas después del filtro '$filter': ${loadedCards.size}")
-
-                    _uiState.update {
-                        it.copy(cardsResource = Resource.Success(loadedCards))
-                    }
-                },
-                onFailure = { throwable ->
-                    println("❌ Error al cargar cartas: ${throwable.message}")
-                    _uiState.update {
-                        it.copy(
-                            cardsResource = Resource.Error(
-                                "No se pudieron cargar las cartas: ${throwable.message ?: "Error desconocido"}",
-                                throwable
-                            )
-                        )
-                    }
-                }
-            )
+            try {
+                val cards = cardRepository.getCards() // USAR getCards() en lugar de getAllCards()
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    cards = cards,
+                    filteredCards = cards,
+                    error = null
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = "Error al cargar cartas: ${e.message}"
+                )
+            }
         }
     }
 
-    fun setFactionFilter(faction: String) {
-        _uiState.update { it.copy(currentFactionFilter = faction) }
-        loadCards()
+    fun filterCards(faction: String?) {
+        _state.value = _state.value.copy(selectedFaction = faction)
+
+        val cards = _state.value.cards
+        var filtered = cards
+
+        // Filtrar por facción
+        faction?.let { selectedFaction ->
+            if (selectedFaction != "Todas") {
+                filtered = filtered.filter { it.faction == selectedFaction }
+            }
+        }
+
+        // Filtrar por búsqueda
+        val searchQuery = _state.value.searchQuery
+        if (searchQuery.isNotBlank()) {
+            filtered = filtered.filter { card ->
+                card.name.contains(searchQuery, ignoreCase = true) ||
+                        card.description.contains(searchQuery, ignoreCase = true)
+            }
+        }
+
+        _state.value = _state.value.copy(filteredCards = filtered)
     }
 
-    fun retry() {
-        loadCards()
-    }
-}
-
-// Función de extensión toDomain (debe estar fuera de la clase)
-fun CardModel.toDomain(context: Context): Card {
-    val resourceName = this.imageUrl?.substringBeforeLast(".") ?: "default_card"
-    var imageId = context.resources.getIdentifier(
-        resourceName,
-        "drawable",
-        context.packageName
-    )
-
-    if (imageId == 0) {
-        val localResourceName = "local_${this.mongoId ?: this.name?.lowercase()?.replace(" ", "_")}"
-        imageId = context.resources.getIdentifier(
-            localResourceName,
-            "drawable",
-            context.packageName
-        )
+    fun setSearchQuery(query: String) {
+        _state.value = _state.value.copy(searchQuery = query)
+        filterCards(_state.value.selectedFaction)
     }
 
-    if (imageId == 0) {
-        imageId = android.R.drawable.ic_menu_gallery
-        println("⚠️ No se encontró imagen para: ${this.name} (buscado como: $resourceName)")
+    fun clearError() {
+        _state.value = _state.value.copy(error = null)
     }
-
-    val safeFaction = this.faction ?: "Neutral"
-    val safeName = this.name ?: "Carta sin nombre"
-    val safeType = this.type ?: "Desconocido"
-    val safeDescription = this.description ?: "Sin descripción"
-
-    val healthValue = this.defense ?: 0
-
-    // Debug log para verificar valores
-    println("🔍 Carta: ${this.name} - Ataque: ${this.attack}, Defense: ${this.defense}, Health mapeado: $healthValue")
-
-    return Card(
-        id = this.mongoId ?: "unknown_${System.currentTimeMillis()}",
-        name = safeName,
-        cost = this.cost ?: 0,
-        attack = this.attack ?: 0,
-        health = healthValue, // ← Usamos defense como health
-        type = safeType,
-        faction = safeFaction,
-        description = safeDescription,
-        imageResId = imageId
-    )
 }
