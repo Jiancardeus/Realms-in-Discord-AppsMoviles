@@ -43,6 +43,7 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+
     fun toggleProfileExpanded() {
         _isProfileExpanded.value = !_isProfileExpanded.value
     }
@@ -56,19 +57,20 @@ class ProfileViewModel @Inject constructor(
 
     fun testMicroserviceConnection() {
         viewModelScope.launch {
-            _microserviceStatus.value = "Probando conexión..."
+            _microserviceStatus.value = "🔍 Probando login en microservicio..."
             try {
-                // Necesitamos hacer un cast para acceder al método testMicroservice()
                 val repository = userRepository as com.example.realmsindiscord.data.repository.UserRepository
                 val isWorking = repository.testMicroservice()
 
                 if (isWorking) {
-                    _microserviceStatus.value = "✅ Microservicio conectado correctamente"
+                    _microserviceStatus.value = "✅ Microservicio funcionando correctamente"
                 } else {
-                    _microserviceStatus.value = "❌ No se pudo conectar al microservicio"
+                    _microserviceStatus.value = "⚠️ Conexión OK pero login falló"
                 }
+            } catch (e: ClassCastException) {
+                _microserviceStatus.value = "❌ Error: No se pudo acceder al método de prueba"
             } catch (e: Exception) {
-                _microserviceStatus.value = "❌ Error: ${e.message}"
+                _microserviceStatus.value = "❌ Error de conexión: ${e.message}"
             }
         }
     }

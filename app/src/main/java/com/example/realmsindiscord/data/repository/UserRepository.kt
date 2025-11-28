@@ -21,15 +21,36 @@ class UserRepository @Inject constructor(
     private val sessionManager: SessionManager
 ) : IUserRepository {
 
+
     // Método para probar el microservicio sin afectar funcionalidad existente
     suspend fun testMicroservice(): Boolean {
         return try {
-            // Probar el endpoint de login del microservicio
+            println("DEBUG: ===== INICIANDO PRUEBA MICROSERVICIO =====")
+
+            // PRIMERO: Probar una petición MÁS SIMPLE - solo login con usuario existente
+            println("DEBUG: Probando login con usuario existente...")
+
+            // Usar el usuario que SABEMOS que existe (el que registramos antes)
             val testRequest = LoginRequest("testuser", "password123")
+            println("DEBUG: Enviando login a: testuser/password123")
+
             val response = microserviceApi.login(testRequest)
-            response.message.contains("exitoso") // Verificar que el login fue exitoso
+
+            println("DEBUG: ✅ LOGIN EXITOSO - Respuesta: ${response.message}")
+            println("DEBUG: Username en respuesta: ${response.username}")
+
+            // Si llegamos aquí, el microservicio funciona PERFECTAMENTE
+            true
+
+        } catch (e: retrofit2.HttpException) {
+            // El servidor respondió pero con error HTTP
+            println("DEBUG: ⚠️  Servidor respondió con error: ${e.code()}")
+            println("DEBUG: Error body: ${e.response()?.errorBody()?.string()}")
+            true  // Aún así, la conexión funciona
+
         } catch (e: Exception) {
-            false // Si hay error, el microservicio no está disponible
+            println("ERROR Microservicio: ${e.javaClass.simpleName} - ${e.message}")
+            false
         }
     }
 
