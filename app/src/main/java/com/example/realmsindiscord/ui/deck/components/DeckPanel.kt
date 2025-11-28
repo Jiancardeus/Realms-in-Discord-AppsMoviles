@@ -1,4 +1,3 @@
-// En ui/deck/components/DeckPanel.kt - VERSIÓN CORREGIDA
 package com.example.realmsindiscord.ui.deck.components
 
 import androidx.compose.foundation.layout.Arrangement
@@ -31,9 +30,10 @@ import com.example.realmsindiscord.ui.theme.TealAccent
 @Composable
 fun DeckPanel(
     deck: Deck?,
-    availableCards: List<com.example.realmsindiscord.data.remote.model.CardModel>, // AGREGADO
+    availableCards: List<com.example.realmsindiscord.data.remote.model.CardModel>,
     validationResult: DeckValidationResult?,
     onRemoveCard: (String) -> Unit,
+    onAddCardCopy: (String) -> Unit,
     onDeckNameChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -68,7 +68,7 @@ fun DeckPanel(
         // LISTA DE CARTAS EN EL MAZO
         val totalCards = deck?.cards?.sumOf { it.count } ?: 0
         Text(
-            "Cartas en el Mazo ($totalCards/30)",
+            "Cartas en el Mazo ($totalCards/22)",
             color = TealAccent,
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp
@@ -78,14 +78,22 @@ fun DeckPanel(
 
         // LISTA DE CARTAS
         if (deck?.cards?.isNotEmpty() == true) {
-            LazyColumn(modifier = Modifier.weight(1f)) {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 items(deck.cards, key = { it.cardId }) { deckCard ->
+                    // Buscar los detalles reales de la carta
+                    val cardDetails = availableCards.find { it.mongoId == deckCard.cardId }
+
                     DeckCardItem(
                         deckCard = deckCard,
-                        availableCards = availableCards, // PASAR availableCards
-                        onRemove = { onRemoveCard(deckCard.cardId) }
+                        cardName = cardDetails?.name ?: "Carga...",
+                        cardCost = cardDetails?.cost ?: 0,
+                        cardType = cardDetails?.type ?: "Desconocido",
+                        onRemove = { onRemoveCard(deckCard.cardId) },
+                        onAdd = { onAddCardCopy(deckCard.cardId) }
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
         } else {
@@ -104,13 +112,34 @@ fun DeckPanel(
         }
 
         // MENSAJES DE VALIDACIÓN
-        validationResult?.errors?.forEach { error ->
-            Text(
-                text = "• $error",
-                color = Color.Red,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(vertical = 2.dp)
-            )
+        validationResult?.let { result ->
+            Column {
+                // Mostrar errores primero
+                if (result.errors.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    result.errors.forEach { error ->
+                        Text(
+                            text = "❌ $error",
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(vertical = 2.dp)
+                        )
+                    }
+                }
+
+                // Mostrar advertencias después
+                if (result.warnings.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    result.warnings.forEach { warning ->
+                        Text(
+                            text = "⚠️ $warning",
+                            color = Color.Yellow,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(vertical = 2.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -121,13 +150,18 @@ private fun DeckStats(
     validationResult: DeckValidationResult?
 ) {
     val totalCards = deck?.cards?.sumOf { it.count } ?: 0
-    val isValid = validationResult?.isValid ?: false
+    val uniqueCards = deck?.cards?.size ?: 0
+    val hasErrors = validationResult?.errors?.isNotEmpty() == true
+    val hasWarnings = validationResult?.warnings?.isNotEmpty() == true
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isValid) Color.Green.copy(alpha = 0.1f)
-            else Color.Red.copy(alpha = 0.1f)
+            containerColor = when {
+                hasErrors -> Color.Red.copy(alpha = 0.1f)
+                hasWarnings -> Color.Yellow.copy(alpha = 0.1f)
+                else -> Color.Green.copy(alpha = 0.1f)
+            }
         )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -145,8 +179,12 @@ private fun DeckStats(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Total Cartas:", color = Color.White)
-                Text("$totalCards/30",
-                    color = if (totalCards in 25..30) Color.Green else Color.Red)
+                Text("$totalCards/22",
+                    color = when {
+                        totalCards == 22 -> Color.Green
+                        totalCards > 15 -> Color.Yellow
+                        else -> Color.Red
+                    })
             }
 
             Row(
@@ -154,7 +192,15 @@ private fun DeckStats(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Cartas Únicas:", color = Color.White)
-                Text("${deck?.cards?.size ?: 0}", color = TealAccent)
+                Text("$uniqueCards", color = TealAccent)
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Facción:", color = Color.White)
+                Text(deck?.faction ?: "No asignada", color = TealAccent)
             }
 
             Row(
@@ -163,8 +209,18 @@ private fun DeckStats(
             ) {
                 Text("Estado:", color = Color.White)
                 Text(
-                    if (isValid) "VÁLIDO" else "INVÁLIDO",
-                    color = if (isValid) Color.Green else Color.Red,
+                    when {
+                        hasErrors -> "❌ CON ERRORES"
+                        hasWarnings -> "⚠️ CON ADVERTENCIAS"
+                        totalCards == 22 -> "✅ VÁLIDO"
+                        else -> "🔄 EN CONSTRUCCIÓN"
+                    },
+                    color = when {
+                        hasErrors -> Color.Red
+                        hasWarnings -> Color.Yellow
+                        totalCards == 22 -> Color.Green
+                        else -> TealAccent
+                    },
                     fontWeight = FontWeight.Bold
                 )
             }

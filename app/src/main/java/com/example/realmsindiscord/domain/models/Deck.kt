@@ -1,4 +1,3 @@
-// En domain/models/Deck.kt
 package com.example.realmsindiscord.domain.models
 
 data class Deck(
@@ -15,7 +14,7 @@ data class DeckCard(
     val cardId: String,
     val count: Int = 1
 ) {
-    fun isValidCount(): Boolean = count in 1..2 // CORREGIDO: número directo
+    fun isValidCount(): Boolean = count in 1..3 // CORREGIDO: número directo
 }
 
 // Reglas del juego
@@ -24,9 +23,22 @@ object DeckRules {
     const val MAX_DECK_SIZE = 22
     const val MAX_COPIES_PER_CARD = 3
     const val MAX_SAME_FACTION_CARDS = 22
+    const val MAX_HERO_COPIES = 1
+
+    // Héroes por facción
+    val FACTION_HEROES = mapOf(
+        "Caballeros Solares" to "Héroe Solar",
+        "Corrupción" to "Gran Cáncer"
+    )
+
+    // Facciones rivales (no se pueden mezclar)
+    val RIVAL_FACTIONS = listOf(
+        setOf("Caballeros Solares", "Corrupción")
+    )
 }
 
 data class DeckValidationResult(
     val isValid: Boolean,
-    val errors: List<String> = emptyList()
+    val errors: List<String> = emptyList(),
+    val warnings: List<String> = emptyList()
 )

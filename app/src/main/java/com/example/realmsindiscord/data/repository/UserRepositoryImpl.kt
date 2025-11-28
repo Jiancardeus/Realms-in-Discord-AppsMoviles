@@ -15,9 +15,8 @@ import retrofit2.HttpException
 
 @Singleton
 class UserRepositoryImpl @Inject constructor(
-    private val apiService: AuthApiService,
-    private val sessionManager: SessionManager,
     @Named("userMicroservice") private val microserviceApi: AuthApiService,
+    private val sessionManager: SessionManager,
     private val userDao: UserDao,
 ) : IUserRepository {
 

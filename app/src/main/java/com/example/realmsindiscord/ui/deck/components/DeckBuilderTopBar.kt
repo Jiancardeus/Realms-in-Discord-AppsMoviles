@@ -1,4 +1,3 @@
-// En ui/deck/components/DeckBuilderTopBar.kt
 package com.example.realmsindiscord.ui.deck.components
 
 import androidx.compose.foundation.layout.Row
@@ -25,9 +24,12 @@ import com.example.realmsindiscord.ui.theme.TealAccent
 @Composable
 fun DeckBuilderTopBar(
     onBack: () -> Unit,
+    onNewDeck: () -> Unit,
     onSave: () -> Unit,
     isSaveEnabled: Boolean
 ) {
+    println("DEBUG: TopBar - isSaveEnabled: $isSaveEnabled") // Agrega este log
+
     TopAppBar(
         title = {
             Text(
@@ -37,12 +39,10 @@ fun DeckBuilderTopBar(
             )
         },
         navigationIcon = {
-            IconButton(
-                onClick = { /* TODO: Nuevo mazo */ }
-            ) {
+            IconButton(onClick = onBack) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_add),
-                    contentDescription = "Nuevo Mazo",
+                    painter = painterResource(id = R.drawable.ic_arrow_back),
+                    contentDescription = "Volver",
                     tint = Color.White
                 )
             }
@@ -50,13 +50,12 @@ fun DeckBuilderTopBar(
         actions = {
             Row {
                 Button(
-                    onClick = { /* TODO: Nuevo mazo */ },
+                    onClick = onNewDeck,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Gray
-                    ),
-                    enabled = true
+                        containerColor = Color(0xFF4CAF50) // Verde
+                    )
                 ) {
-                    Text("Nuevo", color = Color.Black)
+                    Text("Nuevo", color = Color.White, fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -68,12 +67,16 @@ fun DeckBuilderTopBar(
                         containerColor = if (isSaveEnabled) TealAccent else Color.Gray
                     )
                 ) {
-                    Text("Guardar Mazo", color = Color.Black)
+                    Text(
+                        "Guardar Mazo",
+                        color = if (isSaveEnabled) Color.Black else Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Black.copy(alpha = 0.9f)
+            containerColor = Color.Black
         )
     )
 }

@@ -27,6 +27,8 @@ class LibraryViewModel @Inject constructor(
     private val _state = MutableStateFlow(LibraryState())
     val state: StateFlow<LibraryState> = _state.asStateFlow()
 
+    private val availableFactions = listOf("Todas", "Caballeros Solares", "Corrupción")
+
     init {
         loadCards()
     }
@@ -36,7 +38,12 @@ class LibraryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val cards = cardRepository.getCards() // USAR getCards() en lugar de getAllCards()
+                val cards = cardRepository.getCards()
+                println("DEBUG: Cartas cargadas: ${cards.size}")
+                cards.forEach { card ->
+                    println("DEBUG: Carta: ${card.name} - Facción: ${card.faction}")
+                }
+
                 _state.value = _state.value.copy(
                     isLoading = false,
                     cards = cards,
@@ -84,5 +91,9 @@ class LibraryViewModel @Inject constructor(
 
     fun clearError() {
         _state.value = _state.value.copy(error = null)
+    }
+
+    fun getAvailableFactions(): List<String> {
+        return availableFactions
     }
 }

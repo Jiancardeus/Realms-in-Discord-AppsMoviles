@@ -34,7 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.realmsindiscord.ui.components.CardItem
+import com.example.realmsindiscord.ui.common.CardItem
 import com.example.realmsindiscord.ui.theme.TealAccent
 import com.example.realmsindiscord.viewmodel.library.LibraryViewModel
 
@@ -193,7 +193,7 @@ fun CardLibraryScreen(
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
                         modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(state.filteredCards, key = { it.mongoId }) { card ->
@@ -217,7 +217,8 @@ private fun FactionFilterRow(
     selectedFaction: String?,
     onFactionSelect: (String?) -> Unit
 ) {
-    val factions = listOf("Todas", "Fire", "Water", "Earth", "Air", "Neutral")
+    // ✅ USAR FACCIONES CORRECTAS
+    val factions = listOf("Todas", "Caballeros Solares", "Corrupción")
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -241,7 +242,11 @@ private fun FactionFilterRow(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = faction,
+                        text = when (faction) {
+                            "Caballeros Solares" -> "Solares"
+                            "Corrupción" -> "Corrupción"
+                            else -> faction
+                        },
                         color = if (selectedFaction == faction) Color.Black else Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
