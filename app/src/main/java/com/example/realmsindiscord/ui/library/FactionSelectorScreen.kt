@@ -30,9 +30,9 @@ fun FactionSelectorScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "SELECCIONA UNA FACCIÓN",
+            text = "FILTRAR POR FACCIÓN",
             color = TealAccent,
-            fontSize = 20.sp,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -41,32 +41,49 @@ fun FactionSelectorScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(
+            FactionButton(
+                text = "SOLARES",
+                isSelected = currentFaction == "Caballeros Solares",
                 onClick = { onSelectFaction("Caballeros Solares") },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (currentFaction == "Caballeros Solares") TealAccent else Color.Gray
-                )
-            ) {
-                Text("CABALLEROS SOLARES", color = Color.Black, fontWeight = FontWeight.Bold)
-            }
+                selectedColor = Color(0xFFFFD700)
+            )
 
-            Button(
+            FactionButton(
+                text = "CORRUPCIÓN",
+                isSelected = currentFaction == "Corrupción",
                 onClick = { onSelectFaction("Corrupción") },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (currentFaction == "Corrupción") TealAccent else Color.Gray
-                )
-            ) {
-                Text("CORRUPCIÓN", color = Color.Black, fontWeight = FontWeight.Bold)
-            }
+                selectedColor = Color(0xFF9B59B6)
+            )
 
-            Button(
+            FactionButton(
+                text = "TODAS",
+                isSelected = currentFaction == "Todas",
                 onClick = { onSelectFaction("Todas") },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (currentFaction == "Todas") TealAccent else Color.Gray
-                )
-            ) {
-                Text("TODAS", color = Color.Black, fontWeight = FontWeight.Bold)
-            }
+                selectedColor = TealAccent
+            )
         }
+    }
+}
+
+@Composable
+fun FactionButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    selectedColor: Color
+) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelected) selectedColor else Color.Gray.copy(alpha = 0.3f),
+            contentColor = if (isSelected) Color.Black else Color.White
+        ),
+        modifier = Modifier.padding(4.dp)
+    ) {
+        Text(
+            text = text,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp
+        )
     }
 }

@@ -18,7 +18,11 @@ const CardSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    health: {
+    defense: {  // ← ESTE es el campo que usamos como "health"
+        type: Number,
+        default: 0
+    },
+    health: {   // ← Este campo podría no existir o ser diferente
         type: Number,
         default: 0
     },
@@ -40,5 +44,4 @@ const CardSchema = new mongoose.Schema({
         required: true,
     }
 });
-
 module.exports = mongoose.model('Card', CardSchema);

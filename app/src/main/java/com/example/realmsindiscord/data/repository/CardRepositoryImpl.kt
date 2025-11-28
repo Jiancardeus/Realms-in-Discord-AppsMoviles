@@ -65,14 +65,14 @@ class CardRepositoryImpl @Inject constructor(
                     type = localCard.type,
                     description = localCard.description,
                     attack = localCard.attack,
-                    defense = localCard.health, // Mapear health a defense para el modelo
+                    defense = localCard.health, // ← Mapear health local a defense del modelo
                     imageUrl = "local_${localCard.id}",
                     cost = localCard.cost,
-                    health = localCard.health,
+                    health = localCard.health, // ← También asignar al campo health
                     faction = localCard.faction ?: "Neutral"
                 )
             }
-            println("📚 Usando ${cardModels.size} cartas locales como fallback")
+            println("📚 Usando ${cardModels.size} cartas locales con health correcto")
             Result.success(cardModels)
         } catch (e: Exception) {
             println("❌ Error al cargar cartas locales: ${e.message}")
