@@ -18,7 +18,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider // ← CAMBIAR ESTO
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -38,6 +38,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.realmsindiscord.data.model.User
 import com.example.realmsindiscord.ui.theme.TealAccent
 import com.example.realmsindiscord.viewmodel.profile.ProfileManagementViewModel
+import com.example.realmsindiscord.viewmodel.profile.ProfileManagementState // ✅ Agregar esta importación
+import kotlinx.coroutines.delay // ✅ Cambiar de kotlinx.coroutines.delay a delay
 
 @Composable
 fun ProfileManagementScreen(
@@ -47,9 +49,9 @@ fun ProfileManagementScreen(
 ) {
     val viewModel: ProfileManagementViewModel = hiltViewModel()
 
-
+    // Cargar el usuario real cuando se abre la pantalla
     LaunchedEffect(user.id) {
-        viewModel.setUserDirectly(user)
+        viewModel.loadUser(user.id)
     }
 
     val state by viewModel.state.collectAsState()
@@ -78,7 +80,7 @@ fun ProfileManagementScreen(
 @Composable
 fun ProfileManagementContent(
     user: User,
-    state: com.example.realmsindiscord.viewmodel.profile.ProfileManagementState,
+    state: ProfileManagementState, // ✅ Cambiar a solo el nombre de la clase
     onBack: () -> Unit,
     onLogout: () -> Unit,
     onStartEditingUsername: () -> Unit,
@@ -90,6 +92,15 @@ fun ProfileManagementContent(
     onDeleteAccount: () -> Unit,
     onClearMessages: () -> Unit
 ) {
+
+    // Limpiar mensajes después de un tiempo
+    LaunchedEffect(state.error, state.successMessage) {
+        if (state.error != null || state.successMessage != null) {
+            delay(5000) // ✅ Cambiado a delay simple
+            onClearMessages()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -164,7 +175,6 @@ fun ProfileManagementContent(
                     }
                 }
 
-                // CAMBIAR Divider por HorizontalDivider
                 HorizontalDivider(
                     color = TealAccent.copy(alpha = 0.3f),
                     modifier = Modifier
@@ -219,7 +229,8 @@ fun ProfileManagementContent(
 
                                 Button(
                                     onClick = onSaveUsername,
-                                    colors = ButtonDefaults.buttonColors(containerColor = TealAccent)
+                                    colors = ButtonDefaults.buttonColors(containerColor = TealAccent),
+                                    enabled = state.newUsername.isNotBlank() && state.newUsername != user.username
                                 ) {
                                     Text("Guardar")
                                 }

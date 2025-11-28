@@ -2,11 +2,12 @@ package com.example.demo.service;
 
 import com.example.demo.dto.User;
 import com.example.demo.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,12 @@ public class UserService {
 
     public Optional<User> getUserByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    // ✅ AGREGAR ESTE MÉTODO QUE FALTA
+    public boolean validateUser(String username, String password) {
+        Optional<User> user = userRepository.findByUsername(username);
+        return user.isPresent() && user.get().getPassword().equals(password);
     }
 
     public User createUser(User user) {
@@ -62,32 +69,37 @@ public class UserService {
     }
 
     public boolean updateUsername(String userId, String newUsername) {
+        System.out.println("DEBUG: Updating username for userId: " + userId + " to: " + newUsername);
+
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
 
-            // Verificar si el nuevo username ya existe
-            if (userRepository.existsByUsername(newUsername) &&
-                    !user.getUsername().equals(newUsername)) {
+            // Verificar si el nuevo username ya existe para otro usuario
+            Optional<User> existingUser = userRepository.findByUsername(newUsername);
+            if (existingUser.isPresent() && !existingUser.get().getId().equals(userId)) {
+                System.out.println("DEBUG: Username already exists: " + newUsername);
                 return false;
             }
 
             user.setUsername(newUsername);
             userRepository.save(user);
+            System.out.println("DEBUG: Username updated successfully");
             return true;
         }
+
+        System.out.println("DEBUG: User not found with id: " + userId);
         return false;
     }
 
     public void deleteUser(String id) {
+        System.out.println("DEBUG: Deleting user with id: " + id);
+
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("Usuario no encontrado");
         }
-        userRepository.deleteById(id);
-    }
 
-    public boolean validateUser(String username, String password) {
-        Optional<User> user = userRepository.findByUsername(username);
-        return user.isPresent() && user.get().getPassword().equals(password);
+        userRepository.deleteById(id);
+        System.out.println("DEBUG: User deleted successfully");
     }
 }

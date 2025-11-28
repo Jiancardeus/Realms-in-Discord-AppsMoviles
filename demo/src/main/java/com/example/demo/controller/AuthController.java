@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Optional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,16 +64,51 @@ public class AuthController {
     @PutMapping("/update-username")
     public ResponseEntity<?> updateUsername(@Valid @RequestBody Map<String, String> request) {
         try {
-            String newUsername = request.get("newUsername");
-            // En una app real, obtendrías el userId del token JWT
-            // Por ahora, necesitarás pasar el userId de alguna manera
+            System.out.println("🔔 [Spring] Received update-username request");
+            System.out.println("📨 [Spring] Request body: " + request);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Username actualizado exitosamente");
-            return ResponseEntity.ok(response);
+            String currentUsername = request.get("currentUsername"); // ✅ CAMBIAR
+            String newUsername = request.get("newUsername");
+
+            System.out.println("👤 [Spring] currentUsername: " + currentUsername + ", newUsername: " + newUsername);
+
+            if (currentUsername == null || newUsername == null) {
+                System.out.println("❌ [Spring] Missing parameters");
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "currentUsername y newUsername son requeridos");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Buscar usuario por username actual
+            Optional<User> userOpt = userService.getUserByUsername(currentUsername);
+            if (userOpt.isEmpty()) {
+                System.out.println("❌ [Spring] User not found with username: " + currentUsername);
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Usuario no encontrado");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            User user = userOpt.get();
+            boolean success = userService.updateUsername(user.getId(), newUsername);
+
+            if (success) {
+                System.out.println("✅ [Spring] Username updated successfully");
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "Username actualizado exitosamente");
+                return ResponseEntity.ok(response);
+            } else {
+                System.out.println("❌ [Spring] Username update failed");
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "El nombre de usuario ya está en uso");
+                return ResponseEntity.badRequest().body(response);
+            }
 
         } catch (RuntimeException e) {
+            System.out.println("💥 [Spring] Exception: " + e.getMessage());
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", e.getMessage());
@@ -80,15 +116,39 @@ public class AuthController {
         }
     }
 
-    @DeleteMapping("/user/{userId}")
-    public ResponseEntity<?> deleteUser(@PathVariable String userId) {
+    @DeleteMapping("/user")
+    public ResponseEntity<?> deleteUser(@RequestParam String username) { // ✅ AGREGAR esta línea
         try {
-            userService.deleteUser(userId);
+            System.out.println("🔔 [Spring] Received delete user request");
+            System.out.println("👤 [Spring] username to delete: " + username);
+
+            if (username == null || username.isBlank()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "username es requerido");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Buscar usuario por username
+            Optional<User> userOpt = userService.getUserByUsername(username);
+            if (userOpt.isEmpty()) {
+                System.out.println("❌ [Spring] User not found: " + username);
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Usuario no encontrado");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            User user = userOpt.get();
+            userService.deleteUser(user.getId());
+
+            System.out.println("✅ [Spring] User deleted successfully");
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Usuario eliminado exitosamente");
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
+            System.out.println("💥 [Spring] Exception: " + e.getMessage());
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", e.getMessage());

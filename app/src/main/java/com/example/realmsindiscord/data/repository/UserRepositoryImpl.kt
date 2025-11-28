@@ -84,52 +84,83 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun updateUsername(userId: Int, newUsername: String): Boolean {
         return try {
-            // 1. Actualizar en MongoDB (microservicio)
-            val request = UpdateUsernameRequest(newUsername)
+            println("🚀 [UserRepository] START updateUsername")
+
+            // Obtener usuario actual para saber su username
+            val currentUser = userDao.getUserById(userId)
+            if (currentUser == null) {
+                println("❌ [UserRepository] Current user not found with id: $userId")
+                return false
+            }
+
+            val currentUsername = currentUser.username
+            println("📱 [UserRepository] currentUsername: '$currentUsername', newUsername: '$newUsername'")
+
+            val request = UpdateUsernameRequest(
+                currentUsername = currentUsername, // ✅ Usar username actual
+                newUsername = newUsername
+            )
+
+            println("📤 [UserRepository] Sending request to microservice: $request")
+
             val response = microserviceApi.updateUsername(request)
 
-            // 2. Si éxito en backend, actualizar localmente
+            println("📥 [UserRepository] Microservice response received")
+            println("✅ [UserRepository] Response - success: ${response.success}, message: ${response.message}")
+
             if (response.success) {
+                println("💾 [UserRepository] Updating local database...")
                 userDao.updateUsername(userId, newUsername)
                 sessionManager.saveCurrentUser(newUsername)
+                println("🎉 [UserRepository] Username updated successfully in both DBs")
                 true
             } else {
+                println("❌ [UserRepository] Microservice returned false: ${response.message}")
                 false
             }
         } catch (e: Exception) {
-            // Fallback: actualizar solo localmente
-            try {
-                userDao.updateUsername(userId, newUsername)
-                sessionManager.saveCurrentUser(newUsername)
-                true
-            } catch (localError: Exception) {
-                false
-            }
+            println("💥 [UserRepository] ERROR updating username: ${e.javaClass.simpleName} - ${e.message}")
+            e.printStackTrace()
+            false
         }
     }
 
     override suspend fun deleteUser(userId: Int): Boolean {
         return try {
-            // 1. Eliminar en MongoDB (microservicio)
-            val response = microserviceApi.deleteUser(userId.toString())
+            println("🚀 [UserRepository] START deleteUser")
 
-            // 2. Si éxito en backend, eliminar localmente
+            // Obtener usuario para saber su username
+            val currentUser = userDao.getUserById(userId)
+            if (currentUser == null) {
+                println("❌ [UserRepository] Current user not found with id: $userId")
+                return false
+            }
+
+            val username = currentUser.username
+            println("📱 [UserRepository] Deleting user with username: '$username'")
+
+            println("📤 [UserRepository] Sending DELETE request for username: $username")
+
+            // ✅ CAMBIADO: Enviar username como query parameter
+            val response = microserviceApi.deleteUser(username)
+
+            println("📥 [UserRepository] Delete response received")
+            println("✅ [UserRepository] Delete response - success: ${response.success}, message: ${response.message}")
+
             if (response.success) {
+                println("💾 [UserRepository] Deleting from local database...")
                 userDao.deleteUser(userId)
                 sessionManager.clearSession()
+                println("🎉 [UserRepository] User deleted successfully from both DBs")
                 true
             } else {
+                println("❌ [UserRepository] Microservice returned false for delete: ${response.message}")
                 false
             }
         } catch (e: Exception) {
-            // Fallback: eliminar solo localmente
-            try {
-                userDao.deleteUser(userId)
-                sessionManager.clearSession()
-                true
-            } catch (localError: Exception) {
-                false
-            }
+            println("💥 [UserRepository] ERROR deleting user: ${e.javaClass.simpleName} - ${e.message}")
+            e.printStackTrace()
+            false
         }
     }
 

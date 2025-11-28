@@ -18,11 +18,11 @@ public class UserController {
 
     @GetMapping
     public List<User> getAll() {
-        return userService.getAllUsers();  // Cambiado de getAll() a getAllUsers()
+        return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getById(@PathVariable String id) {  // Cambiado de Long a String
+    public ResponseEntity<User> getById(@PathVariable String id) {
         return userService.getUserById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -31,7 +31,7 @@ public class UserController {
     @PostMapping
     public ResponseEntity<User> create(@RequestBody User user) {
         try {
-            User createdUser = userService.createUser(user);  // Cambiado de create() a createUser()
+            User createdUser = userService.createUser(user);
             return ResponseEntity.ok(createdUser);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
@@ -39,9 +39,9 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> update(@PathVariable String id, @RequestBody User user) {  // Cambiado de Long a String
+    public ResponseEntity<User> update(@PathVariable String id, @RequestBody User user) {
         try {
-            User updatedUser = userService.updateUser(id, user);  // Cambiado de update() a updateUser()
+            User updatedUser = userService.updateUser(id, user);
             return ResponseEntity.ok(updatedUser);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -49,9 +49,9 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {  // Cambiado de Long a String
+    public ResponseEntity<Void> delete(@PathVariable String id) {
         try {
-            userService.deleteUser(id);  // Cambiado de delete() a deleteUser()
+            userService.deleteUser(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();

@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 data class ProfileManagementState(
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -20,7 +19,6 @@ data class ProfileManagementState(
     val newUsername: String = "",
     val showDeleteConfirmation: Boolean = false
 )
-
 @HiltViewModel
 class ProfileManagementViewModel @Inject constructor(
     private val userRepository: IUserRepository
@@ -32,25 +30,16 @@ class ProfileManagementViewModel @Inject constructor(
     private val _userState = MutableStateFlow<User?>(null)
     val userState: StateFlow<User?> = _userState.asStateFlow()
 
-    // Nuevo método para cargar el usuario real desde la base de datos
-
     fun loadUser(userId: Int) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
             try {
                 val user = userRepository.getUserById(userId)
-                if (user != null) {
-                    _userState.value = user
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        error = null
-                    )
-                } else {
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        error = "Usuario no encontrado en la base de datos local"
-                    )
-                }
+                _userState.value = user
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = if (user == null) "Usuario no encontrado" else null
+                )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
@@ -102,26 +91,26 @@ class ProfileManagementViewModel @Inject constructor(
                 val success = userRepository.updateUsername(userId, _state.value.newUsername)
 
                 if (success) {
-                    // Actualizar el usuario localmente también
+                    // Actualizar el usuario localmente
                     val updatedUser = _userState.value?.copy(username = _state.value.newUsername)
                     _userState.value = updatedUser
 
                     _state.value = _state.value.copy(
                         isLoading = false,
                         isEditingUsername = false,
-                        successMessage = "Nombre de usuario actualizado correctamente",
+                        successMessage = "✅ Nombre de usuario actualizado correctamente",
                         error = null
                     )
                 } else {
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        error = "Error al actualizar el nombre de usuario"
+                        error = "❌ Error: El nombre de usuario ya está en uso"
                     )
                 }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = "Error de conexión: ${e.message}"
+                    error = "❌ Error de conexión: ${e.message}"
                 )
             }
         }
@@ -131,6 +120,7 @@ class ProfileManagementViewModel @Inject constructor(
         _userState.value = user
         _state.value = _state.value.copy(isLoading = false, error = null)
     }
+
     fun showDeleteConfirmation() {
         _state.value = _state.value.copy(showDeleteConfirmation = true)
     }
@@ -150,21 +140,21 @@ class ProfileManagementViewModel @Inject constructor(
                     _state.value = _state.value.copy(
                         isLoading = false,
                         showDeleteConfirmation = false,
-                        successMessage = "Cuenta eliminada correctamente"
+                        successMessage = "✅ Cuenta eliminada correctamente"
                     )
                     // Pequeño delay para mostrar el mensaje de éxito
-                    kotlinx.coroutines.delay(1000)
-                    onSuccess()
+                    kotlinx.coroutines.delay(1500)
+                    onSuccess() // Navegar al login
                 } else {
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        error = "Error al eliminar la cuenta"
+                        error = "❌ Error al eliminar la cuenta"
                     )
                 }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = "Error de conexión: ${e.message}"
+                    error = "❌ Error de conexión: ${e.message}"
                 )
             }
         }
