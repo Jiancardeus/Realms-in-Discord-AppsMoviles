@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -67,23 +68,8 @@ fun CardItem(card: Card) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Badge de Costo
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .background(
-                            color = TealAccent,
-                            shape = RoundedCornerShape(8.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "${card.cost}",
-                        color = Color.Black,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
-                    )
-                }
+                // BADGE DE COSTO MEJORADO - RAYO AZUL
+                CostBadge(cost = card.cost)
 
                 // Badge de Facción
                 Box(
@@ -111,7 +97,6 @@ fun CardItem(card: Card) {
                 }
             }
 
-            // Nombre de la Carta
             Text(
                 text = card.name,
                 color = Color.White,
@@ -209,6 +194,7 @@ fun CardItem(card: Card) {
     }
 }
 
+
 @Composable
 fun StatBadge(label: String, value: Int, color: Color, icon: String) {
     Column(
@@ -243,6 +229,68 @@ fun getFactionColor(faction: String): Color {
     }
 }
 
+@Composable
+fun CostBadge(cost: Int) {
+    Box(
+        modifier = Modifier
+            .size(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Fondo con gradiente
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF64B5F6),
+                            Color(0xFF1976D2),
+                            Color(0xFF0D47A1)
+                        )
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .border(
+                    width = 1.5.dp,
+                    color = Color(0xFFBBDEFB),
+                    shape = RoundedCornerShape(10.dp)
+                )
+        )
+
+        // Efecto de brillo
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.3f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                )
+        )
+
+        // Contenido
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "⚡",
+                fontSize = 12.sp,
+                modifier = Modifier.padding(bottom = 1.dp)
+            )
+            Text(
+                text = "$cost",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                modifier = Modifier.shadow(2.dp)
+            )
+        }
+    }
+}
 fun getFactionAbbreviation(faction: String): String {
     return when (faction) {
         "Caballeros Solares" -> "SOL"
