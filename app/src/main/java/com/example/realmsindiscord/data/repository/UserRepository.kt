@@ -3,20 +3,35 @@ package com.example.realmsindiscord.data.repository
 import com.example.realmsindiscord.data.local.SessionManager
 import com.example.realmsindiscord.data.local.UserDao
 import com.example.realmsindiscord.data.remote.api.AuthApiService
+import com.example.realmsindiscord.data.remote.request.LoginRequest
 import com.example.realmsindiscord.data.remote.request.RegisterRequest
 import com.example.realmsindiscord.data.remote.request.UpdateUsernameRequest
 import com.example.realmsindiscord.data.model.User
 import com.example.realmsindiscord.domain.repository.IUserRepository
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 import retrofit2.HttpException
 
 @Singleton
 class UserRepository @Inject constructor(
     private val apiService: AuthApiService,
+    @Named("userMicroservice") private val microserviceApi: AuthApiService, // Nuevo: microservicio
     private val userDao: UserDao,
     private val sessionManager: SessionManager
 ) : IUserRepository {
+
+    // Método para probar el microservicio sin afectar funcionalidad existente
+    suspend fun testMicroservice(): Boolean {
+        return try {
+            // Probar el endpoint de login del microservicio
+            val testRequest = LoginRequest("testuser", "password123")
+            val response = microserviceApi.login(testRequest)
+            response.message.contains("exitoso") // Verificar que el login fue exitoso
+        } catch (e: Exception) {
+            false // Si hay error, el microservicio no está disponible
+        }
+    }
 
     override suspend fun getUserByUsername(username: String): User? {
         return userDao.getUserByUsername(username)
@@ -25,7 +40,7 @@ class UserRepository @Inject constructor(
     override suspend fun registerUser(user: User): Boolean {
         return try {
             val request = RegisterRequest(user.username, user.email, user.passwordHash)
-            val response = apiService.register(request)
+            val response = apiService.register(request) // Servidor principal
             response.message.contains("registrado")
         } catch (e: HttpException) {
             false
@@ -74,7 +89,6 @@ class UserRepository @Inject constructor(
                 false
             }
         } catch (e: HttpException) {
-            // Si hay error HTTP, podríamos mostrar un mensaje específico
             false
         } catch (e: Exception) {
             // Si hay error de conexión, intentar solo localmente como fallback

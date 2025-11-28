@@ -10,13 +10,14 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Named
 import javax.inject.Singleton
-
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "http://10.0.2.2:5000/"
+    private const val MAIN_BASE_URL = "http://10.0.2.2:5000/"  // Servidor principal existente
+    private const val USER_BASE_URL = "http://10.0.2.2:5001/"  // Nuevo microservicio usuarios
 
     @Provides
     @Singleton
@@ -34,25 +35,46 @@ object NetworkModule {
             .build()
     }
 
+    // Retrofit para el servidor principal (EXISTENTE)
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    fun provideMainRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(MAIN_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
+    // Retrofit para el microservicio
     @Provides
     @Singleton
-    fun provideAuthApiService(retrofit: Retrofit): AuthApiService {
-        return retrofit.create(AuthApiService::class.java)
+    fun provideUserRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(USER_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // Servicios del servidor principal
+    @Provides
+    @Singleton
+    fun provideAuthApiService(mainRetrofit: Retrofit): AuthApiService {
+        return mainRetrofit.create(AuthApiService::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideCardApiService(retrofit: Retrofit): CardApiService {
-        return retrofit.create(CardApiService::class.java)
+    fun provideCardApiService(mainRetrofit: Retrofit): CardApiService {
+        return mainRetrofit.create(CardApiService::class.java)
+    }
+
+
+    @Provides
+    @Singleton
+    @Named("userMicroservice")
+    fun provideUserMicroserviceApi(userRetrofit: Retrofit): AuthApiService {
+        return userRetrofit.create(AuthApiService::class.java)
     }
 }

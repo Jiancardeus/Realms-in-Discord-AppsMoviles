@@ -22,6 +22,9 @@ class ProfileViewModel @Inject constructor(
     private val _isProfileExpanded = MutableStateFlow(false)
     val isProfileExpanded: StateFlow<Boolean> = _isProfileExpanded.asStateFlow()
 
+    private val _microserviceStatus = MutableStateFlow<String?>(null)
+    val microserviceStatus: StateFlow<String?> = _microserviceStatus.asStateFlow()
+
     init {
         loadCurrentUser()
     }
@@ -48,5 +51,30 @@ class ProfileViewModel @Inject constructor(
         val user = _userState.value ?: return 0f
         val expForNextLevel = user.level * 1000
         return user.experience.toFloat() / expForNextLevel
+    }
+
+
+    fun testMicroserviceConnection() {
+        viewModelScope.launch {
+            _microserviceStatus.value = "Probando conexión..."
+            try {
+                // Necesitamos hacer un cast para acceder al método testMicroservice()
+                val repository = userRepository as com.example.realmsindiscord.data.repository.UserRepository
+                val isWorking = repository.testMicroservice()
+
+                if (isWorking) {
+                    _microserviceStatus.value = "✅ Microservicio conectado correctamente"
+                } else {
+                    _microserviceStatus.value = "❌ No se pudo conectar al microservicio"
+                }
+            } catch (e: Exception) {
+                _microserviceStatus.value = "❌ Error: ${e.message}"
+            }
+        }
+    }
+
+    // Método para limpiar el mensaje de estado
+    fun clearMicroserviceStatus() {
+        _microserviceStatus.value = null
     }
 }

@@ -1,24 +1,43 @@
 package com.example.demo.dto;
 
-import jakarta.persistence.*;
+import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.Indexed;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
 
-@Entity
 @Data
-@Table(name = "users")
+@Document(collection = "users")
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @NotBlank(message = "El nombre no puede estar vacío")
-    private String name;
+    @NotBlank(message = "El username es obligatorio")
+    @Indexed(unique = true)
+    private String username;
 
-    @Email(message = "Debe ser un correo válido")
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El formato del email no es válido")
+    @Indexed(unique = true)
     private String email;
-    
-}
 
+    @NotBlank(message = "La contraseña es obligatoria")
+    private String password;
+
+    private int level = 1;
+    private int experience = 0;
+    private int wins = 0;
+    private int losses = 0;
+    private int draws = 0;
+
+    public User() {}
+
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+    }
+}

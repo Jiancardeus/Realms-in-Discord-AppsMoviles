@@ -22,6 +22,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,6 +52,7 @@ fun HomeScreen(
     val profileViewModel: ProfileViewModel = hiltViewModel()
     val context = LocalContext.current
     val activity = context as? android.app.Activity
+    val microserviceStatus by profileViewModel.microserviceStatus.collectAsState()
 
     // --- MODIFICACIÓN AGREGADA ---
     // Forzar recarga del usuario cuando se abre la pantalla
@@ -166,7 +169,7 @@ fun HomeScreen(
                         }
                     }
 
-                    // SECCIÓN MEDIA
+                    // SECCIÓN MEDIA - AQUÍ VA EL BOTÓN DE PRUEBA DEL MICROSERVICIO
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -174,12 +177,35 @@ fun HomeScreen(
                             .padding(vertical = 16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            "¡BIENVENIDO A REALMS IN DISCORD!",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                "¡BIENVENIDO A REALMS IN DISCORD!",
+                                color = Color.White,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            // BOTÓN PARA PROBAR EL MICROSERVICIO
+                            Button(
+                                onClick = { profileViewModel.testMicroserviceConnection() },
+                                colors = ButtonDefaults.buttonColors(containerColor = TealAccent)
+                            ) {
+                                Text("Probar Conexión Microservicio", color = Color.Black, fontWeight = FontWeight.Bold)
+                            }
+
+                            // MOSTRAR ESTADO DEL MICROSERVICIO
+                            microserviceStatus?.let { status ->
+                                Text(
+                                    text = status,
+                                    color = if (status.contains("✅")) Color.Green else Color.Red,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
                     }
 
                     // SECCIÓN INFERIOR (Tienda/Estadísticas)
