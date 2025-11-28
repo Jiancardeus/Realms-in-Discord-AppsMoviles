@@ -43,7 +43,6 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-
     fun toggleProfileExpanded() {
         _isProfileExpanded.value = !_isProfileExpanded.value
     }
@@ -54,29 +53,4 @@ class ProfileViewModel @Inject constructor(
         return user.experience.toFloat() / expForNextLevel
     }
 
-
-    fun testMicroserviceConnection() {
-        viewModelScope.launch {
-            _microserviceStatus.value = "🔍 Probando login en microservicio..."
-            try {
-                val repository = userRepository as com.example.realmsindiscord.data.repository.UserRepositoryImpl
-                val isWorking = repository.testMicroservice()
-
-                if (isWorking) {
-                    _microserviceStatus.value = "✅ Microservicio funcionando correctamente"
-                } else {
-                    _microserviceStatus.value = "⚠️ Conexión OK pero login falló"
-                }
-            } catch (e: ClassCastException) {
-                _microserviceStatus.value = "❌ Error: No se pudo acceder al método de prueba"
-            } catch (e: Exception) {
-                _microserviceStatus.value = "❌ Error de conexión: ${e.message}"
-            }
-        }
-    }
-
-    // Método para limpiar el mensaje de estado
-    fun clearMicroserviceStatus() {
-        _microserviceStatus.value = null
-    }
 }

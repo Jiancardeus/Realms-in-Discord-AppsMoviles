@@ -18,25 +18,50 @@ class LoginUseCase @Inject constructor(
 
     suspend operator fun invoke(username: String, password: String): LoginResult {
         return try {
-            val request = LoginRequest(username, password)
-            val response = apiService.login(request)
+            // PRIMERO intentar con el microservicio
+            val microserviceSuccess = userRepositoryImpl.loginWithMicroservice(username, password)
 
-            if (response.username != null) {
-                // Crear y guardar el usuario localmente
-                val user = User(
-                    username = response.username,
-                    email = "",
-                    passwordHash = "",
-                    level = 1,
-                    experience = 0,
-                    wins = 0,
-                    losses = 0,
-                    draws = 0
-                )
-                userRepositoryImpl.saveUserLocally(user)
-                LoginResult.Success(user)
+            if (microserviceSuccess) {
+                // Éxito con microservicio, obtener usuario local
+                val user = userRepositoryImpl.getUserByUsername(username)
+                if (user != null) {
+                    LoginResult.Success(user)
+                } else {
+                    // Crear usuario local si no existe
+                    val newUser = User(
+                        username = username,
+                        email = "",
+                        passwordHash = password,
+                        level = 1,
+                        experience = 0,
+                        wins = 0,
+                        losses = 0,
+                        draws = 0
+                    )
+                    userRepositoryImpl.saveUserLocally(newUser)
+                    LoginResult.Success(newUser)
+                }
             } else {
-                LoginResult.Error("Usuario o contraseña incorrectos.")
+                // Fallback: intentar con servidor principal
+                val request = LoginRequest(username, password)
+                val response = apiService.login(request)
+
+                if (response.username != null) {
+                    val user = User(
+                        username = response.username,
+                        email = "",
+                        passwordHash = password,
+                        level = 1,
+                        experience = 0,
+                        wins = 0,
+                        losses = 0,
+                        draws = 0
+                    )
+                    userRepositoryImpl.saveUserLocally(user)
+                    LoginResult.Success(user)
+                } else {
+                    LoginResult.Error("Usuario o contraseña incorrectos.")
+                }
             }
         } catch (e: HttpException) {
             LoginResult.Error("Credenciales inválidas.")

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 data class ProfileManagementState(
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -32,16 +33,24 @@ class ProfileManagementViewModel @Inject constructor(
     val userState: StateFlow<User?> = _userState.asStateFlow()
 
     // Nuevo método para cargar el usuario real desde la base de datos
+
     fun loadUser(userId: Int) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
             try {
                 val user = userRepository.getUserById(userId)
-                _userState.value = user
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = if (user == null) "Usuario no encontrado" else null
-                )
+                if (user != null) {
+                    _userState.value = user
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = null
+                    )
+                } else {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = "Usuario no encontrado en la base de datos local"
+                    )
+                }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,

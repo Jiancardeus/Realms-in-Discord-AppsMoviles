@@ -39,21 +39,10 @@ fun ProfileButton(
 ) {
     val user by viewModel.userState.collectAsState()
     val isExpanded by viewModel.isProfileExpanded.collectAsState()
-    val microserviceStatus by viewModel.microserviceStatus.collectAsState()
-
-    microserviceStatus?.let { status ->
-        Text(
-            text = status,
-            color = if (status.contains("✅")) Color.Green else Color.Red,
-            modifier = Modifier.padding(8.dp)
-        )
-    }
-
 
     // Debug temporal
     println("DEBUG: ProfileButton - user = $user")
     println("DEBUG: ProfileButton - isExpanded = $isExpanded")
-    // --- FIN DE MODIFICACIÓN ---
 
     Box(modifier = modifier) {
         // Botón compacto del perfil

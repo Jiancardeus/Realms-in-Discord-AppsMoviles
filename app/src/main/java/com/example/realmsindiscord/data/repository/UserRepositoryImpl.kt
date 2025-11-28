@@ -1,6 +1,5 @@
 package com.example.realmsindiscord.data.repository
 
-import android.se.omapi.Session
 import com.example.realmsindiscord.data.local.SessionManager
 import com.example.realmsindiscord.data.local.UserDao
 import com.example.realmsindiscord.data.remote.api.AuthApiService
@@ -18,42 +17,9 @@ import retrofit2.HttpException
 class UserRepositoryImpl @Inject constructor(
     private val apiService: AuthApiService,
     private val sessionManager: SessionManager,
-    @Named("userMicroservice") private val microserviceApi: AuthApiService, // Nuevo: microservicio
+    @Named("userMicroservice") private val microserviceApi: AuthApiService,
     private val userDao: UserDao,
 ) : IUserRepository {
-
-
-    // Método para probar el microservicio sin afectar funcionalidad existente
-    suspend fun testMicroservice(): Boolean {
-        return try {
-            println("DEBUG: ===== INICIANDO PRUEBA MICROSERVICIO =====")
-
-            // PRIMERO: Probar una petición MÁS SIMPLE - solo login con usuario existente
-            println("DEBUG: Probando login con usuario existente...")
-
-            // Usar el usuario que SABEMOS que existe (el que registramos antes)
-            val testRequest = LoginRequest("testuser", "password123")
-            println("DEBUG: Enviando login a: testuser/password123")
-
-            val response = microserviceApi.login(testRequest)
-
-            println("DEBUG: ✅ LOGIN EXITOSO - Respuesta: ${response.message}")
-            println("DEBUG: Username en respuesta: ${response.username}")
-
-            // Si llegamos aquí, el microservicio funciona PERFECTAMENTE
-            true
-
-        } catch (e: retrofit2.HttpException) {
-            // El servidor respondió pero con error HTTP
-            println("DEBUG: ⚠️  Servidor respondió con error: ${e.code()}")
-            println("DEBUG: Error body: ${e.response()?.errorBody()?.string()}")
-            true  // Aún así, la conexión funciona
-
-        } catch (e: Exception) {
-            println("ERROR Microservicio: ${e.javaClass.simpleName} - ${e.message}")
-            false
-        }
-    }
 
     override suspend fun getUserByUsername(username: String): User? {
         return userDao.getUserByUsername(username)
@@ -61,18 +27,38 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun registerUser(user: User): Boolean {
         return try {
+            // Usar el microservicio para registrar en MongoDB
             val request = RegisterRequest(user.username, user.email, user.passwordHash)
-            val response = apiService.register(request) // Servidor principal
-            response.message.contains("registrado")
+            val response = microserviceApi.register(request)
+
+            // Si el registro es exitoso en el microservicio, guardar localmente
+            if (response.message.contains("registrado") || response.message.contains("exitosamente")) {
+                userDao.insertUser(user)
+                sessionManager.saveCurrentUser(user.username)
+                true
+            } else {
+                false
+            }
         } catch (e: HttpException) {
-            false
+            // Si hay error de conexión, intentar registro local como fallback
+            try {
+                val localUserId = userDao.registerUser(user)
+                if (localUserId > 0) {
+                    sessionManager.saveCurrentUser(user.username)
+                    true
+                } else {
+                    false
+                }
+            } catch (localError: Exception) {
+                false
+            }
         } catch (e: Exception) {
             false
         }
     }
 
     override suspend fun isEmailTaken(email: String): Boolean {
-        return false // Por implementar
+        return userDao.isEmailTaken(email)
     }
 
     override suspend fun getCurrentUser(): User? {
@@ -98,9 +84,9 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun updateUsername(userId: Int, newUsername: String): Boolean {
         return try {
-            // 1. Primero intentar actualizar en MongoDB (backend)
+            // 1. Actualizar en MongoDB (microservicio)
             val request = UpdateUsernameRequest(newUsername)
-            val response = apiService.updateUsername(request)
+            val response = microserviceApi.updateUsername(request)
 
             // 2. Si éxito en backend, actualizar localmente
             if (response.success) {
@@ -110,15 +96,12 @@ class UserRepositoryImpl @Inject constructor(
             } else {
                 false
             }
-        } catch (e: HttpException) {
-            false
         } catch (e: Exception) {
-            // Si hay error de conexión, intentar solo localmente como fallback
-            // O mostrar mensaje de "sin conexión"
+            // Fallback: actualizar solo localmente
             try {
                 userDao.updateUsername(userId, newUsername)
                 sessionManager.saveCurrentUser(newUsername)
-                true // Devolver true pero mostrar advertencia de que es solo local
+                true
             } catch (localError: Exception) {
                 false
             }
@@ -127,8 +110,8 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun deleteUser(userId: Int): Boolean {
         return try {
-            // 1. Primero intentar eliminar en MongoDB (backend)
-            val response = apiService.deleteUser(userId.toString())
+            // 1. Eliminar en MongoDB (microservicio)
+            val response = microserviceApi.deleteUser(userId.toString())
 
             // 2. Si éxito en backend, eliminar localmente
             if (response.success) {
@@ -138,14 +121,12 @@ class UserRepositoryImpl @Inject constructor(
             } else {
                 false
             }
-        } catch (e: HttpException) {
-            false
         } catch (e: Exception) {
-            // Si hay error de conexión, intentar solo localmente
+            // Fallback: eliminar solo localmente
             try {
                 userDao.deleteUser(userId)
                 sessionManager.clearSession()
-                true // Devolver true pero mostrar advertencia
+                true
             } catch (localError: Exception) {
                 false
             }
@@ -154,5 +135,40 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun getUserById(userId: Int): User? {
         return userDao.getUserById(userId)
+    }
+
+    // NUEVO MÉTODO: Login usando microservicio
+    suspend fun loginWithMicroservice(username: String, password: String): Boolean {
+        return try {
+            val request = LoginRequest(username, password)
+            val response = microserviceApi.login(request)
+
+            if (response.username != null) {
+                // Login exitoso, guardar usuario localmente
+                val user = User(
+                    username = response.username,
+                    email = "", // El microservicio no devuelve email, podrías necesitar un endpoint adicional
+                    passwordHash = password, // Guardar hash seguro en producción
+                    level = 1,
+                    experience = 0,
+                    wins = 0,
+                    losses = 0,
+                    draws = 0
+                )
+
+                // Verificar si el usuario ya existe localmente
+                val existingUser = userDao.getUserByUsername(username)
+                if (existingUser == null) {
+                    userDao.insertUser(user)
+                }
+
+                sessionManager.saveCurrentUser(username)
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
     }
 }

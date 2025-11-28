@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -22,8 +21,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,15 +49,12 @@ fun HomeScreen(
     val profileViewModel: ProfileViewModel = hiltViewModel()
     val context = LocalContext.current
     val activity = context as? android.app.Activity
-    val microserviceStatus by profileViewModel.microserviceStatus.collectAsState()
 
-    // --- MODIFICACIÓN AGREGADA ---
     // Forzar recarga del usuario cuando se abre la pantalla
     LaunchedEffect(Unit) {
         println("DEBUG: HomeScreen - Forzando recarga del usuario")
         profileViewModel.loadCurrentUser()
     }
-    // --- FIN DE MODIFICACIÓN ---
 
     LaunchedEffect(Unit) {
         activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -169,7 +163,7 @@ fun HomeScreen(
                         }
                     }
 
-                    // SECCIÓN MEDIA - AQUÍ VA EL BOTÓN DE PRUEBA DEL MICROSERVICIO
+                    // SECCIÓN MEDIA - ELIMINAR BOTÓN DE PRUEBA
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -188,23 +182,8 @@ fun HomeScreen(
                                 fontWeight = FontWeight.Bold
                             )
 
-                            // BOTÓN PARA PROBAR EL MICROSERVICIO
-                            Button(
-                                onClick = { profileViewModel.testMicroserviceConnection() },
-                                colors = ButtonDefaults.buttonColors(containerColor = TealAccent)
-                            ) {
-                                Text("Probar Conexión Microservicio", color = Color.Black, fontWeight = FontWeight.Bold)
-                            }
-
-                            // MOSTRAR ESTADO DEL MICROSERVICIO
-                            microserviceStatus?.let { status ->
-                                Text(
-                                    text = status,
-                                    color = if (status.contains("✅")) Color.Green else Color.Red,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
+                            // ELIMINAR COMPLETAMENTE el botón de prueba y el estado
+                            // Texto de bienvenida limpio sin elementos de prueba
                         }
                     }
 
