@@ -43,7 +43,7 @@ fun CardItem(card: Card) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(280.dp)
+            .height(320.dp) // ← Más altura
             .padding(4.dp)
             .border(
                 width = 2.dp,
@@ -59,44 +59,26 @@ fun CardItem(card: Card) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp),
+                .padding(10.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header: Costo y Facción
+            // Header muy compacto
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // BADGE DE COSTO MEJORADO - RAYO AZUL
                 CostBadge(cost = card.cost)
 
-                // Badge de Facción
-                Box(
-                    modifier = Modifier
-                        .height(24.dp)
-                        .padding(horizontal = 8.dp)
-                        .background(
-                            color = factionColor.copy(alpha = 0.3f),
-                            shape = RoundedCornerShape(6.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = factionColor,
-                            shape = RoundedCornerShape(6.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = getFactionAbbreviation(card.faction ?: "Neutral"),
-                        color = factionColor,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp,
-                        modifier = Modifier.padding(horizontal = 6.dp)
-                    )
-                }
+                Text(
+                    text = getFactionAbbreviation(card.faction ?: "Neutral"),
+                    color = factionColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp
+                )
             }
 
+            // Nombre compacto
             Text(
                 text = card.name,
                 color = Color.White,
@@ -105,83 +87,67 @@ fun CardItem(card: Card) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp)
+                modifier = Modifier.fillMaxWidth()
             )
 
-            // Imagen de la Carta
+            // IMAGEN MUY DESTACADA
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .height(160.dp) // ← Mucha más altura
+                    .clip(RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
             ) {
                 androidx.compose.foundation.Image(
                     painter = painterResource(id = card.imageResId),
                     contentDescription = card.name,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-
-                // Overlay para mejorar legibilidad del texto
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.Black.copy(alpha = 0.1f)
-                                )
-                            )
-                        )
+                    contentScale = ContentScale.Fit // ← Imagen completa sin recortar
                 )
             }
 
-            // Stats: Ataque y Salud
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StatBadge(
-                    label = "ATK",
-                    value = card.attack,
-                    color = Color(0xFFFF6B6B), // Rojo
-                    icon = "⚔️"
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                StatBadge(
-                    label = "HP",
-                    value = card.health,
-                    color = Color(0xFF4ECDC4), // Verde
-                    icon = "❤️"
-                )
-            }
-
-            // Tipo y Descripción
+            // Stats y tipo en sección inferior compacta
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Stats
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    StatBadge(
+                        label = "ATAQUE",
+                        value = card.attack,
+                        color = Color(0xFFFF6B6B),
+                        icon = "⚔️"
+                    )
+
+                    StatBadge(
+                        label = "VIDA",
+                        value = card.health,
+                        color = Color(0xFF4ECDC4),
+                        icon = "❤️"
+                    )
+                }
+
+                // Tipo
                 Text(
                     text = card.type.uppercase(),
                     color = factionColor,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    modifier = Modifier.padding(top = 4.dp)
                 )
 
-                if (card.description.isNotBlank()) {
+                // Descripción (solo si cabe)
+                if (card.description.isNotBlank() && card.description.length < 50) {
                     Text(
                         text = card.description,
                         color = Color.LightGray,
                         fontSize = 9.sp,
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
                         modifier = Modifier

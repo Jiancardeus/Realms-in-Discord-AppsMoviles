@@ -48,8 +48,8 @@ fun getInitialCards(context: Context): List<Card> {
         Card(
             id = "CS005",
             name = "Héroe Solar",
-            cost = 4, attack = 4, health = 5,
-            type = "Tropa",
+            cost = 4, attack = 4, health = 40,
+            type = "Líder",
             faction = "Caballeros Solares",
             description = "Unidad de ataque balanceada.",
             imageResId = R.drawable.heroe_solar
