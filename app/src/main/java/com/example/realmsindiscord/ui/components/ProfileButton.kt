@@ -34,7 +34,7 @@ import com.example.realmsindiscord.viewmodel.profile.ProfileViewModel
 @Composable
 fun ProfileButton(
     viewModel: ProfileViewModel,
-    onEditProfile: (User) -> Unit,
+    onEditProfile: (User) -> Unit, // ✅ PARÁMETRO AÑADIDO
     modifier: Modifier = Modifier
 ) {
     val user by viewModel.userState.collectAsState()
@@ -107,9 +107,9 @@ fun ProfileButton(
                 user = user,
                 onClose = { viewModel.toggleProfileExpanded() },
                 onEditProfile = {
-                    user?.let {
-                        onEditProfile(it)
-                        viewModel.toggleProfileExpanded() // Cerramos el panel
+                    if (user != null) {
+                        onEditProfile(user!!)
+                        viewModel.toggleProfileExpanded()
                     }
                 },
                 modifier = Modifier

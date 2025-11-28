@@ -46,6 +46,7 @@ fun HomeScreen(
     onNavigateToPlay: () -> Unit,
     onNavigateToProfileManagement: (User) -> Unit
 ) {
+
     val profileViewModel: ProfileViewModel = hiltViewModel()
     val context = LocalContext.current
     val activity = context as? android.app.Activity
@@ -78,14 +79,7 @@ fun HomeScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    ProfileButton(
-                        viewModel = profileViewModel,
-                        onEditProfile = onNavigateToProfileManagement,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
 
-                    // LOGO
 
                     // BOTONES DE NAVEGACIÓN
                     Column(
@@ -111,7 +105,6 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .weight(1f)
                     .padding(16.dp)
             ) {
                 Column(
@@ -216,7 +209,7 @@ fun HomeScreen(
             }
         }
     }
-}
+
 
 @Composable
 fun NavBarButton(text: String, onClick: () -> Unit) {

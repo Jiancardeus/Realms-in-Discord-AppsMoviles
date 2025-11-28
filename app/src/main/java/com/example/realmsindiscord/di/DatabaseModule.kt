@@ -24,7 +24,8 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "realms-discord-db"
-        ).build()
+        ).fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -38,6 +39,4 @@ object DatabaseModule {
     fun provideSessionManager(@ApplicationContext context: Context): SessionManager {
         return SessionManager(context)
     }
-
-
 }

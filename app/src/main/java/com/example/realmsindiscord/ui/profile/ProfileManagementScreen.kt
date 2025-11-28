@@ -16,7 +16,7 @@ import com.example.realmsindiscord.viewmodel.profile.ProfileManagementViewModel
 
 @Composable
 fun ProfileManagementScreen(
-    user: User?,
+    user: User?, // Ahora puede ser null mientras carga
     onBack: () -> Unit,
     onAccountDeleted: () -> Unit,
     viewModel: ProfileManagementViewModel = hiltViewModel()

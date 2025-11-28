@@ -7,8 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -18,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.example.realmsindiscord.data.model.User
 import com.example.realmsindiscord.ui.deck.DeckBuilderScreen
 import com.example.realmsindiscord.ui.home.HomeScreen
 import com.example.realmsindiscord.ui.library.CardLibraryScreen
@@ -56,10 +55,9 @@ class MainActivity : ComponentActivity() {
                     val currentDestination by navController.currentBackStackEntryAsState()
                     val currentRoute = currentDestination?.destination?.route
 
-                    requestedOrientation = when (currentRoute) {
-                        Screen.HOME -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-
-                        else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    when (currentRoute) {
+                        Screen.HOME -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                        else -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                     }
 
                     NavHost(
@@ -121,7 +119,7 @@ class MainActivity : ComponentActivity() {
                             PlayScreen()
                         }
 
-
+                        // ✅ NUEVA PANTALLA: Gestión de Perfil
                         composable(
                             route = "${Screen.PROFILE_MANAGEMENT}/{userId}",
                             arguments = listOf(
@@ -131,15 +129,22 @@ class MainActivity : ComponentActivity() {
                             val userId = backStackEntry.arguments?.getInt("userId") ?: 0
                             val viewModel: ProfileManagementViewModel = hiltViewModel()
 
-                            // Obtener el usuario real desde el ViewModel
-                            LaunchedEffect(userId) {
-                                viewModel.loadUser(userId)
-                            }
-
-                            val userState by viewModel.userState.collectAsState()
+                            // En una implementación real, aquí obtendrías el usuario de la base de datos
+                            // Por ahora creamos un usuario temporal para probar
+                            val tempUser = User(
+                                id = userId,
+                                username = "Usuario Temporal",
+                                email = "temp@example.com",
+                                passwordHash = "",
+                                level = 1,
+                                experience = 0,
+                                wins = 0,
+                                losses = 0,
+                                draws = 0
+                            )
 
                             ProfileManagementScreen(
-                                user = userState, // Usar el estado del usuario real
+                                user = tempUser,
                                 onBack = { navController.popBackStack() },
                                 onAccountDeleted = {
                                     navController.navigate(Screen.LOGIN) {
