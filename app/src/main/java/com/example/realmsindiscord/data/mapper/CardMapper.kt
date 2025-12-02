@@ -16,7 +16,7 @@ object CardMapper {
             type = cardModel.type,
             faction = cardModel.faction,
             description = cardModel.description,
-            imageResId = mapImageUrlToResId(cardModel.imageUrl) // ✅ MAPEAR IMAGEN
+            imageResId = mapImageUrlToResId(cardModel.imageUrl)
         )
     }
 

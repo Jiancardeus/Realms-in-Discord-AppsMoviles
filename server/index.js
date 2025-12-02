@@ -15,7 +15,7 @@ app.use(express.json());
 
 // --- Conexión a MongoDB Atlas ---
 // Esta es tu URL de conexión real, la dejamos aquí.
-const MONGODB_URI = 'mongodb+srv://admin_jian:jiandios@app.w280lxg.mongodb.net/?appName=app';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://admin_jian:jiandios@app.w280lxg.mongodb.net/?appName=app';
 
 console.log("🔗 Conectando a MongoDB...");
 
