@@ -56,8 +56,8 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideDeckRepository(
-        deckApiService: DeckApiService, // Nuevo parámetro
-        sessionManager: SessionManager   // Nuevo parámetro
+        deckApiService: DeckApiService,
+        sessionManager: SessionManager   
     ): IDeckRepository {
         return DeckRepositoryImpl(
             deckApiService,

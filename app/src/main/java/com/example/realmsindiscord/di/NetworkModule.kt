@@ -2,6 +2,7 @@ package com.example.realmsindiscord.di
 
 import com.example.realmsindiscord.data.remote.api.AuthApiService
 import com.example.realmsindiscord.data.remote.api.CardApiService
+import com.example.realmsindiscord.data.remote.api.DeckApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,15 +18,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-
     private const val BASE_URL = "http://52.91.119.27/"
-
-    @Provides
-    @Singleton
-    @Named("userMicroservice")
-    fun provideUserMicroserviceApi(retrofit: Retrofit): AuthApiService {
-        return retrofit.create(AuthApiService::class.java)
-    }
 
 
     @Provides
@@ -35,6 +28,7 @@ object NetworkModule {
             level = HttpLoggingInterceptor.Level.BODY
         }
     }
+
 
     @Provides
     @Singleton
@@ -50,7 +44,7 @@ object NetworkModule {
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         println("DEBUG: ✅ Retrofit configurado en: $BASE_URL")
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)  // ← MISMA URL PARA TODO
+            .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -59,14 +53,27 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideAuthApiService(retrofit: Retrofit): AuthApiService {
+        return retrofit.create(AuthApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
     fun provideCardApiService(retrofit: Retrofit): CardApiService {
         return retrofit.create(CardApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDeckApiService(retrofit: Retrofit): DeckApiService {
+        return retrofit.create(DeckApiService::class.java)
     }
 
 
     @Provides
     @Singleton
-    fun provideAuthApiService(retrofit: Retrofit): AuthApiService {
+    @Named("userMicroservice")
+    fun provideUserMicroserviceApi(retrofit: Retrofit): AuthApiService {
         return retrofit.create(AuthApiService::class.java)
     }
 }
