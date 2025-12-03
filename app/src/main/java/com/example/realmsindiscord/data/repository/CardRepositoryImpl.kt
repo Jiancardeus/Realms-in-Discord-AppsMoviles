@@ -7,6 +7,7 @@ import com.example.realmsindiscord.data.remote.api.CardApiService
 import com.example.realmsindiscord.data.remote.model.CardModel
 import com.example.realmsindiscord.domain.repository.ICardRepository
 import kotlinx.coroutines.flow.first
+import retrofit2.Response
 import javax.inject.Inject
 
 class CardRepositoryImpl @Inject constructor(
@@ -19,32 +20,49 @@ class CardRepositoryImpl @Inject constructor(
         return try {
             // 1. Intentar obtener de API
             println("DEBUG: Obteniendo cartas de la API...")
-            val remoteCards = cardApiService.getCards()
-            println("DEBUG: Cartas obtenidas de API: ${remoteCards.size}")
+            val response: Response<List<CardModel>> = cardApiService.getCards()
 
-            // 2. Guardar en base de datos local
-            val localCards = remoteCards.map { cardModel ->
-                CardMapper.toLocalCard(cardModel) // ✅ LLAMAR AL MAPPER CORRECTAMENTE
+            if (response.isSuccessful) {
+                val remoteCards = response.body() ?: emptyList()
+                println("DEBUG: Cartas obtenidas de API: ${remoteCards.size}")
+
+                // 2. Guardar en base de datos local
+                val localCards = remoteCards.map { cardModel ->
+                    CardMapper.toLocalCard(cardModel)
+                }
+                cardDao.insertAll(localCards)
+
+                remoteCards
+            } else {
+                println("DEBUG: API respondió con error: ${response.code()}")
+                getFallbackCards()
             }
-            cardDao.insertAll(localCards)
-
-            remoteCards
         } catch (e: Exception) {
             println("DEBUG: Error API, usando fallback: ${e.message}")
-            // 3. Fallback: obtener de base de datos local
-            try {
-                val localCards = cardDao.getAllCards().first() // ✅ AGREGAR .first()
-                println("DEBUG: Cartas obtenidas de BD local: ${localCards.size}")
-                localCards.map { localCard ->
-                    CardMapper.toCardModel(localCard) // ✅ LLAMAR AL MAPPER CORRECTAMENTE
-                }
-            } catch (dbError: Exception) {
-                println("DEBUG: Error BD local, usando datos de ejemplo")
-                // 4. Último fallback: datos de ejemplo con tus facciones reales
-                getSampleCardsWithRealFactions()
-            }
+            getFallbackCards()
         }
     }
+
+    private suspend fun getFallbackCards(): List<CardModel> {
+        return try {
+            // 3. Fallback: obtener de base de datos local
+            val localCards = cardDao.getAllCards().first()
+            println("DEBUG: Cartas obtenidas de BD local: ${localCards.size}")
+            localCards.map { localCard ->
+                CardMapper.toCardModel(localCard)
+            }
+        } catch (dbError: Exception) {
+            println("DEBUG: Error BD local, usando datos de ejemplo")
+            // 4. Último fallback: datos de ejemplo con tus facciones reales
+            getSampleCardsWithRealFactions()
+        }
+    }
+
+    private fun getSampleCardsWithRealFactions(): List<CardModel> {
+        // Tu lógica actual para cartas de ejemplo
+        return emptyList() // Ajusta esto
+    }
+}
 
     private fun getSampleCardsWithRealFactions(): List<CardModel> {
         return listOf(
@@ -125,4 +143,4 @@ class CardRepositoryImpl @Inject constructor(
             )
         )
     }
-}
+

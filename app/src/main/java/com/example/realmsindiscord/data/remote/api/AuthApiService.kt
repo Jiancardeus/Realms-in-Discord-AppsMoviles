@@ -19,11 +19,11 @@ interface AuthApiService {
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): AuthResponse
 
-    // ✅ CORREGIDO: Solo el body, sin userId en el path
+
     @PUT("api/auth/update-username")
     suspend fun updateUsername(@Body request: UpdateUsernameRequest): UpdateUsernameResponse
 
-    // ✅ CORREGIDO: Query parameter para username
+
     @DELETE("api/auth/user")
     suspend fun deleteUser(@Query("username") username: String): DeleteUserResponse
 }
