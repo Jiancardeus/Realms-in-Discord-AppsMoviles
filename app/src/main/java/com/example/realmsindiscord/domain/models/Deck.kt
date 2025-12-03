@@ -1,9 +1,9 @@
 package com.example.realmsindiscord.domain.models
 
 data class Deck(
-    val id: String = "", // Cambiado de Int a String para MongoDB
+    val id: String = "",
     val name: String,
-    val username: String, // Cambiado de userId (Int) a username (String)
+    val username: String,
     val faction: String = "Neutral",
     val cards: List<DeckCard> = emptyList(),
     val isActive: Boolean = true
@@ -12,7 +12,10 @@ data class Deck(
 data class DeckCard(
     val cardId: String,
     val count: Int = 1
-)
+) {
+
+    fun isValidCount(): Boolean = count in 1..3
+}
 
 // Las reglas se mantienen igual
 object DeckRules {
