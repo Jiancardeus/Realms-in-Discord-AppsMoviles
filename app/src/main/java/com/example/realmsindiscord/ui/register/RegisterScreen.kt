@@ -1,4 +1,3 @@
-// En ui/register/RegisterScreen.kt - ACTUALIZAR COMPLETO:
 package com.example.realmsindiscord.ui.register
 
 import androidx.compose.foundation.Image

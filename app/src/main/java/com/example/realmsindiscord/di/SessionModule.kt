@@ -1,4 +1,3 @@
-// En di/SessionModule.kt
 package com.example.realmsindiscord.di
 
 import android.content.Context

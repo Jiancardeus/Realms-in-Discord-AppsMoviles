@@ -29,7 +29,7 @@ object RepositoryModule {
     fun provideUserRepository(
         @Named("userMicroservice") microserviceApi: AuthApiService,
         sessionManager: SessionManager,
-        userDao: UserDao // ✅ Este parámetro está disponible
+        userDao: UserDao //  Este parámetro está disponible
     ): IUserRepository {
         return UserRepositoryImpl(
             microserviceApi,
