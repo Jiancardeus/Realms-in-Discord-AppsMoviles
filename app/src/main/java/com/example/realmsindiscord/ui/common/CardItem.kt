@@ -1,5 +1,6 @@
 package com.example.realmsindiscord.ui.common
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -28,11 +30,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.realmsindiscord.R
+import com.example.realmsindiscord.data.remote.model.CardModel
 import com.example.realmsindiscord.ui.theme.TealAccent
 
 @Composable
 fun CardItem(
-    card: com.example.realmsindiscord.data.remote.model.CardModel,
+    card: CardModel,
     onClick: () -> Unit
 ) {
     Card(
@@ -40,7 +44,7 @@ fun CardItem(
             .fillMaxWidth()
             .clickable { onClick() },
         colors = CardDefaults.cardColors(
-            containerColor = Color.Black.copy(alpha = 0.8f)
+            containerColor = Color(0xFF1E1E1E) // Gris oscuro para mejor contraste
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(12.dp)
@@ -50,48 +54,42 @@ fun CardItem(
                 .fillMaxWidth()
                 .padding(12.dp)
         ) {
-            // 🖼️ IMAGEN PRIMERO - MÁS ARRIBA
+            // 1. IMAGEN DE LA CARTA
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
-                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-                    .background(Color.DarkGray.copy(alpha = 0.3f))
+                    .height(140.dp) // Un poco más alto para ver mejor
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.Black)
             ) {
+                // Usamos la función interna actualizada que incluye TODAS las cartas
                 val imageResId = getImageResourceFromUrl(card.imageUrl)
 
                 if (imageResId != 0) {
-                    androidx.compose.foundation.Image(
+                    Image(
                         painter = painterResource(id = imageResId),
-                        contentDescription = "Imagen de ${card.name}",
+                        contentDescription = card.name,
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop // Crop para llenar el cuadro
                     )
                 } else {
+                    // Placeholder si falla la imagen
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.DarkGray.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "🎴",
-                                fontSize = 24.sp
-                            )
-                            Text(
-                                text = "Sin Imagen",
-                                color = Color.Gray,
-                                fontSize = 12.sp
-                            )
+                            Text("🖼️", fontSize = 30.sp)
+                            Text("Sin Imagen", color = Color.Gray, fontSize = 10.sp)
+                            Text(card.imageUrl, color = Color.DarkGray, fontSize = 8.sp) // Debug
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Encabezado: Nombre y Costo
+            // 2. ENCABEZADO: NOMBRE Y COSTO
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -101,130 +99,141 @@ fun CardItem(
                     text = card.name,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+                    fontSize = 16.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
 
-                // Costo
+                // Círculo de Costo
                 Box(
                     modifier = Modifier
-                        .background(TealAccent, CircleShape)
-                        .size(24.dp),
+                        .size(28.dp)
+                        .background(TealAccent, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "${card.cost}",
                         color = Color.Black,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
+                        fontSize = 14.sp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // SOLO 3 ATRIBUTOS: Ataque, Vida/Defensa, Tipo
+            // 3. ESTADÍSTICAS (Ataque / Defensa / Vida)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                // Ataque (Rojo)
+                if (card.attack > 0) {
+                    StatBadge("⚔️ ${card.attack}", Color(0xFFFF6B6B))
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+
+                // Defensa (Azul) - Si tiene
+                if (card.defense > 0) {
+                    StatBadge("🛡️ ${card.defense}", Color(0xFF4FC3F7))
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+
+                // Vida (Verde) - Si tiene (casi siempre)
+                if (card.health > 0) {
+                    StatBadge("❤️ ${card.health}", Color(0xFF51CF66))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 4. DESCRIPCIÓN
+            Text(
+                text = card.description,
+                color = Color.LightGray,
+                fontSize = 11.sp,
+                lineHeight = 14.sp,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 5. PIE: TIPO Y FACCIÓN
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Ataque (si es mayor a 0)
-                if (card.attack > 0) {
-                    StatBadge("⚔️${card.attack}", Color.Red)
-                } else {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-
-                // Vida o Defensa (usar el que tenga valor)
-                val defenseValue = if (card.defense > 0) card.defense else card.health
-                if (defenseValue > 0) {
-                    StatBadge("❤️$defenseValue", Color.Green)
-                } else {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-
-                // Tipo de carta
                 Text(
-                    text = card.type,
+                    text = card.type.uppercase(),
                     color = Color.Yellow.copy(alpha = 0.8f),
                     fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = card.faction.uppercase(),
+                    color = getFactionColor(card.faction),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Descripción
-            Text(
-                text = card.description,
-                color = Color.White.copy(alpha = 0.9f),
-                fontSize = 10.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = 12.sp
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Facción
-            Text(
-                text = card.faction,
-                color = getFactionColor(card.faction),
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold
-            )
         }
     }
 }
 
 @Composable
-private fun StatBadge(text: String, color: Color) {
+fun StatBadge(text: String, color: Color) {
     Text(
         text = text,
         color = color,
-        fontSize = 10.sp,
+        fontSize = 13.sp,
         fontWeight = FontWeight.Bold
     )
+}
+
+// Función auxiliar para spacers horizontales
+@Composable
+fun Spacer(modifier: Modifier) {
+    androidx.compose.foundation.layout.Spacer(modifier = modifier)
 }
 
 private fun getFactionColor(faction: String): Color {
     return when (faction.lowercase()) {
         "caballeros solares" -> Color(0xFFFFD700) // Dorado
         "corrupción" -> Color(0xFF9B59B6) // Púrpura
-        "fire" -> Color(0xFFFF6B35)
-        "water" -> Color(0xFF4FC3F7)
-        "earth" -> Color(0xFF81C784)
-        "air" -> Color(0xFFE1F5FE)
-        "neutral" -> Color(0xFFB0BEC5)
         else -> TealAccent
     }
 }
 
-// Función para obtener el recurso de imagen desde la URL
+// ✅ ESTA FUNCIÓN ES CRÍTICA: Asocia el texto de la URL con el ID del recurso
 private fun getImageResourceFromUrl(imageUrl: String): Int {
     return when {
-        imageUrl.contains("espadachin_solar", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.espadachin_solar
-        imageUrl.contains("sacerdote_solar", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.sacerdote_solar
-        imageUrl.contains("porta_estandarte", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.porta_estandarte
-        imageUrl.contains("alabardero_real", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.alabardero_real
-        imageUrl.contains("heroe_solar", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.heroe_solar
-        imageUrl.contains("rey_paladin", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.rey_paladin
-        imageUrl.contains("mago_de_batalla", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.mago_de_batalla
-        imageUrl.contains("avatar_de_la_luz", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.avatar_de_la_luz
-        imageUrl.contains("acolito_putrido", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.acolito_putrido
-        imageUrl.contains("huevo_de_la_podredumbre", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.huevo_de_la_podredumbre
-        imageUrl.contains("sin_luz", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.sin_luz
-        imageUrl.contains("amalgama_de_putrefaccion", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.amalgama_de_putrefaccion
-        imageUrl.contains("neuro_amalgama", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.neuro_amalgama
-        imageUrl.contains("corruptores", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.corruptores
-        imageUrl.contains("gran_devorador", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.gran_devorador
-        imageUrl.contains("senor_de_la_podredumbre", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.senor_de_la_podredumbre
-        imageUrl.contains("gran_cancer", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.gran_cancer
-        imageUrl.contains("miasma_toxica", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.miasma_toxica
-        imageUrl.contains("quistes", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.quistes
-        imageUrl.contains("campo_de_corrupcion", ignoreCase = true) -> com.example.realmsindiscord.R.drawable.campo_de_corrupcion
+        // Caballeros Solares
+        imageUrl.contains("espadachin_solar", ignoreCase = true) -> R.drawable.espadachin_solar
+        imageUrl.contains("sacerdote_solar", ignoreCase = true) -> R.drawable.sacerdote_solar
+        imageUrl.contains("porta_estandarte", ignoreCase = true) -> R.drawable.porta_estandarte
+        imageUrl.contains("alabardero_real", ignoreCase = true) -> R.drawable.alabardero_real
+        imageUrl.contains("heroe_solar", ignoreCase = true) -> R.drawable.heroe_solar
+        imageUrl.contains("rey_paladin", ignoreCase = true) -> R.drawable.rey_paladin
+        imageUrl.contains("mago_de_batalla", ignoreCase = true) -> R.drawable.mago_de_batalla
+        imageUrl.contains("avatar_de_la_luz", ignoreCase = true) -> R.drawable.avatar_de_la_luz
+
+        // Corrupción
+        imageUrl.contains("acolito_putrido", ignoreCase = true) -> R.drawable.acolito_putrido
+        imageUrl.contains("huevo_de_la_podredumbre", ignoreCase = true) -> R.drawable.huevo_de_la_podredumbre
+        imageUrl.contains("sin_luz", ignoreCase = true) -> R.drawable.sin_luz
+        imageUrl.contains("amalgama_de_putrefaccion", ignoreCase = true) -> R.drawable.amalgama_de_putrefaccion
+        imageUrl.contains("neuro_amalgama", ignoreCase = true) -> R.drawable.neuro_amalgama
+        imageUrl.contains("corruptores", ignoreCase = true) -> R.drawable.corruptores
+        imageUrl.contains("gran_devorador", ignoreCase = true) -> R.drawable.gran_devorador
+        imageUrl.contains("senor_de_la_podredumbre", ignoreCase = true) -> R.drawable.senor_de_la_podredumbre
+        imageUrl.contains("gran_cancer", ignoreCase = true) -> R.drawable.gran_cancer
+        imageUrl.contains("miasma_toxica", ignoreCase = true) -> R.drawable.miasma_toxica
+        imageUrl.contains("quistes", ignoreCase = true) -> R.drawable.quistes
+        imageUrl.contains("campo_de_corrupcion", ignoreCase = true) -> R.drawable.campo_de_corrupcion
+
         else -> 0
     }
 }

@@ -27,7 +27,6 @@ public class UserService {
         return userRepository.findByUsername(username);
     }
 
-    // ✅ AGREGAR ESTE MÉTODO QUE FALTA
     public boolean validateUser(String username, String password) {
         Optional<User> user = userRepository.findByUsername(username);
         return user.isPresent() && user.get().getPassword().equals(password);

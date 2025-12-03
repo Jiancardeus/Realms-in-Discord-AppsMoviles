@@ -18,7 +18,8 @@ import javax.inject.Singleton
 object NetworkModule {
 
 
-    private const val BASE_URL = "http://52.91.119.27/"
+
+    private const val BASE_URL = "http://52.91.119.27:5001/"
 
     @Provides
     @Singleton
@@ -68,5 +69,11 @@ object NetworkModule {
     @Singleton
     fun provideAuthApiService(retrofit: Retrofit): AuthApiService {
         return retrofit.create(AuthApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDeckApiService(retrofit: Retrofit): com.example.realmsindiscord.data.remote.api.DeckApiService {
+        return retrofit.create(com.example.realmsindiscord.data.remote.api.DeckApiService::class.java)
     }
 }

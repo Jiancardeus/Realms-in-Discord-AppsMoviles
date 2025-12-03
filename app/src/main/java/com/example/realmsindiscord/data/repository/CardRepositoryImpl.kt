@@ -24,15 +24,21 @@ class CardRepositoryImpl @Inject constructor(
 
             if (response.isSuccessful) {
                 val remoteCards = response.body() ?: emptyList()
-                println("DEBUG: Cartas obtenidas de API: ${remoteCards.size}")
 
-                // 2. Guardar en base de datos local
-                val localCards = remoteCards.map { cardModel ->
-                    CardMapper.toLocalCard(cardModel)
+                if (remoteCards.isNotEmpty()) {
+                    println("DEBUG: Cartas obtenidas de API: ${remoteCards.size}")
+
+                    // Guardar en base de datos local
+                    val localCards = remoteCards.map { cardModel ->
+                        CardMapper.toLocalCard(cardModel)
+                    }
+                    cardDao.insertAll(localCards)
+                    remoteCards
+                } else {
+                    // Si la API responde OK pero una lista vacía, usamos fallback
+                    println("DEBUG: API devolvió lista vacía, usando fallback")
+                    getFallbackCards()
                 }
-                cardDao.insertAll(localCards)
-
-                remoteCards
             } else {
                 println("DEBUG: API respondió con error: ${response.code()}")
                 getFallbackCards()
@@ -45,28 +51,34 @@ class CardRepositoryImpl @Inject constructor(
 
     private suspend fun getFallbackCards(): List<CardModel> {
         return try {
-            // 3. Fallback: obtener de base de datos local
-            val localCards = cardDao.getAllCards().first()
-            println("DEBUG: Cartas obtenidas de BD local: ${localCards.size}")
-            localCards.map { localCard ->
-                CardMapper.toCardModel(localCard)
+            // 3. Intentar leer de la BD local
+            val localCardsEntities = cardDao.getAllCards().first()
+
+            if (localCardsEntities.isNotEmpty()) {
+                println("DEBUG: Usando cartas de BD local (${localCardsEntities.size})")
+                localCardsEntities.map { localCard ->
+                    CardMapper.toCardModel(localCard)
+                }
+            } else {
+                // 4. SI LA BD ESTÁ VACÍA (Caso Reinstalación) -> CARGAR DATOS DE EJEMPLO
+                println("DEBUG: BD local vacía. Cargando datos de ejemplo (Hardcoded)...")
+                val sampleCards = getSampleCardsWithRealFactions()
+
+                // Opcional: Guardar estos datos de ejemplo en la BD para que persistan
+                val localSamples = sampleCards.map { CardMapper.toLocalCard(it) }
+                cardDao.insertAll(localSamples)
+
+                sampleCards
             }
         } catch (dbError: Exception) {
-            println("DEBUG: Error BD local, usando datos de ejemplo")
-            // 4. Último fallback: datos de ejemplo con tus facciones reales
+            println("DEBUG: Error crítico en BD local: ${dbError.message}")
             getSampleCardsWithRealFactions()
         }
     }
 
     private fun getSampleCardsWithRealFactions(): List<CardModel> {
-        // Tu lógica actual para cartas de ejemplo
-        return emptyList() // Ajusta esto
-    }
-}
-
-    private fun getSampleCardsWithRealFactions(): List<CardModel> {
         return listOf(
-            // CARTAS SOLARES REALES
+            // --- CABALLEROS SOLARES ---
             CardModel(
                 mongoId = "CS001",
                 name = "Espadachín Solar",
@@ -99,12 +111,24 @@ class CardRepositoryImpl @Inject constructor(
                 cost = 4,
                 attack = 3,
                 defense = 0,
-                health = 4,
+                health = 40,
                 faction = "Caballeros Solares",
                 imageUrl = "porta_estandarte"
             ),
+            CardModel(
+                mongoId = "CS005",
+                name = "Héroe Solar",
+                type = "Líder",
+                description = "Unidad de ataque balanceada.",
+                cost = 0,
+                attack = 4,
+                defense = 0,
+                health = 40,
+                faction = "Caballeros Solares",
+                imageUrl = "heroe_solar"
+            ),
 
-            // CARTAS DE CORRUPCIÓN REALES
+            // --- CORRUPCIÓN ---
             CardModel(
                 mongoId = "CC001",
                 name = "Acólito Pútrido",
@@ -130,17 +154,29 @@ class CardRepositoryImpl @Inject constructor(
                 imageUrl = "huevo_de_la_podredumbre"
             ),
             CardModel(
-                mongoId = "CC003",
-                name = "Sin Luz",
-                type = "Tropa",
-                description = "Una criatura vacía, un heraldo del fin.",
-                cost = 2,
+                mongoId = "CC009",
+                name = "Gran Cáncer",
+                type = "Líder",
+                description = "Por cada carta aliada muerta genera un sin luz.",
+                cost = 0,
                 attack = 3,
                 defense = 0,
-                health = 1,
+                health = 30,
                 faction = "Corrupción",
-                imageUrl = "sin_luz"
+                imageUrl = "gran_cancer"
+            ),
+            CardModel(
+                mongoId = "CC012",
+                name = "Campo de Corrupción",
+                type = "Orden",
+                description = "Roba 5 cartas del mazo y escoge una.",
+                cost = 2,
+                attack = 0,
+                defense = 0,
+                health = 0,
+                faction = "Corrupción",
+                imageUrl = "campo_de_corrupcion"
             )
         )
     }
-
+}

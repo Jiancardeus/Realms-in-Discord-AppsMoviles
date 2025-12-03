@@ -6,6 +6,7 @@ import com.example.realmsindiscord.data.local.UserDao
 import com.example.realmsindiscord.data.local.SessionManager
 import com.example.realmsindiscord.data.remote.api.AuthApiService
 import com.example.realmsindiscord.data.remote.api.CardApiService
+import com.example.realmsindiscord.data.remote.api.DeckApiService // Asegúrate de importar esto
 import com.example.realmsindiscord.data.repository.CardRepositoryImpl
 import com.example.realmsindiscord.data.repository.DeckRepositoryImpl
 import com.example.realmsindiscord.data.repository.UserRepositoryImpl
@@ -29,7 +30,7 @@ object RepositoryModule {
     fun provideUserRepository(
         @Named("userMicroservice") microserviceApi: AuthApiService,
         sessionManager: SessionManager,
-        userDao: UserDao //  Este parámetro está disponible
+        userDao: UserDao
     ): IUserRepository {
         return UserRepositoryImpl(
             microserviceApi,
@@ -54,7 +55,13 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideDeckRepository(): IDeckRepository {
-        return DeckRepositoryImpl()
+    fun provideDeckRepository(
+        deckApiService: DeckApiService, // Nuevo parámetro
+        sessionManager: SessionManager   // Nuevo parámetro
+    ): IDeckRepository {
+        return DeckRepositoryImpl(
+            deckApiService,
+            sessionManager
+        )
     }
 }

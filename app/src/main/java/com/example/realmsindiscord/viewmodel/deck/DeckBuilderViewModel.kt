@@ -25,24 +25,17 @@ class DeckBuilderViewModel @Inject constructor(
     private val _state = MutableStateFlow(DeckBuilderState())
     val state: StateFlow<DeckBuilderState> = _state.asStateFlow()
 
-    private var currentUserId: Int = 1
+    private var currentUsername: String = ""
 
     init {
-        println("DEBUG: Inicializando DeckBuilderViewModel")
         loadCurrentUser()
         loadAvailableCards()
     }
 
     private fun loadCurrentUser() {
-        viewModelScope.launch {
-            try {
-                val username = sessionManager.getCurrentUsername()
-                currentUserId = 1
-                println("DEBUG: Usuario cargado: $username, ID: $currentUserId")
-            } catch (e: Exception) {
-                println("DEBUG: Error cargando usuario: ${e.message}")
-                currentUserId = 1
-            }
+        val username = sessionManager.getCurrentUsername()
+        if (username != null) {
+            currentUsername = username
         }
     }
 
@@ -50,25 +43,21 @@ class DeckBuilderViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
             try {
-                println("DEBUG: Cargando cartas disponibles...")
                 val cards = cardRepository.getCards()
-                println("DEBUG: ✅ Cartas cargadas: ${cards.size}")
-                println("DEBUG: Primeras 3 cartas: ${cards.take(3).map { it.name }}")
 
                 _state.value = _state.value.copy(
                     availableCards = cards,
-                    filteredCards = cards, // Asegurar que filteredCards tenga las mismas cartas
+                    filteredCards = cards,
                     isLoading = false
                 )
 
-                // Solo crear mazo si no existe uno actual
+                // Si no hay mazo actual, creamos uno nuevo por defecto
                 if (_state.value.currentDeck == null) {
                     createNewDeck()
                 } else {
                     validateDeck()
                 }
             } catch (e: Exception) {
-                println("DEBUG: ❌ Error cargando cartas: ${e.message}")
                 _state.value = _state.value.copy(
                     error = "Error al cargar cartas: ${e.message}",
                     isLoading = false
@@ -78,9 +67,13 @@ class DeckBuilderViewModel @Inject constructor(
     }
 
     fun createNewDeck() {
+        // Aseguramos tener el usuario actualizado
+        loadCurrentUser()
+
         val newDeck = Deck(
-            name = "Nuevo Mazo ${System.currentTimeMillis() % 10000}",
-            userId = currentUserId,
+            id = "", // ID vacío para indicar que es nuevo (MongoDB lo generará)
+            name = "Nuevo Mazo",
+            username = currentUsername, // Usamos el username real
             faction = "Neutral",
             cards = emptyList()
         )
@@ -89,15 +82,13 @@ class DeckBuilderViewModel @Inject constructor(
             error = null,
             successMessage = "✅ Nuevo mazo creado"
         )
-        println("DEBUG: Nuevo mazo creado: ${newDeck.name}")
-        println("DEBUG: Cartas en mazo: ${newDeck.cards.size}, Total: ${newDeck.cards.sumOf { it.count }}")
         validateDeck()
     }
 
     fun addCardToDeck(card: com.example.realmsindiscord.data.remote.model.CardModel) {
         val currentDeck = _state.value.currentDeck ?: return
 
-        // NUEVA VALIDACIÓN: Verificar si es un héroe antes de agregar
+        // Validar si es héroe
         val isHero = card.type == "Líder" || card.name.contains("Héroe") || card.name == "Gran Cáncer"
 
         if (isHero) {
@@ -122,20 +113,16 @@ class DeckBuilderViewModel @Inject constructor(
 
         if (existingCardIndex >= 0) {
             val existingCard = updatedCards[existingCardIndex]
-
-            // Validar límite de copias (3 para cartas normales, 1 para héroes)
             val maxCopies = if (isHero) 1 else 3
 
             if (existingCard.count < maxCopies) {
                 updatedCards[existingCardIndex] = existingCard.copy(count = existingCard.count + 1)
-                println("DEBUG: Incrementada copia de ${card.name}, ahora: ${existingCard.count + 1}")
             } else {
                 _state.value = _state.value.copy(error = "Máximo $maxCopies copias por carta permitidas")
                 return
             }
         } else {
             updatedCards.add(DeckCard(cardId = card.mongoId, count = 1))
-            println("DEBUG: Agregada nueva carta: ${card.name}")
         }
 
         val updatedDeck = currentDeck.copy(cards = updatedCards)
@@ -143,9 +130,6 @@ class DeckBuilderViewModel @Inject constructor(
             currentDeck = updatedDeck,
             error = null
         )
-
-        val totalCardsAfter = updatedDeck.cards.sumOf { it.count }
-        println("DEBUG: addCardToDeck - total cartas después: $totalCardsAfter")
 
         validateDeck()
     }
@@ -201,51 +185,38 @@ class DeckBuilderViewModel @Inject constructor(
 
     private fun filterCards() {
         val cards = _state.value.availableCards
-        println("DEBUG: filterCards - availableCards: ${cards.size}")
-
         var filtered = cards
 
         // Filtrar por facción
         _state.value.selectedFaction?.let { faction ->
-            println("DEBUG: Filtrando por facción: $faction")
             if (faction != "Todas") {
                 filtered = filtered.filter { it.faction == faction }
-                println("DEBUG: Después de filtrar por facción: ${filtered.size}")
             }
         }
 
         // Filtrar por búsqueda
         if (_state.value.searchQuery.isNotBlank()) {
-            println("DEBUG: Filtrando por búsqueda: ${_state.value.searchQuery}")
             filtered = filtered.filter { card ->
                 card.name.contains(_state.value.searchQuery, ignoreCase = true) ||
                         card.description.contains(_state.value.searchQuery, ignoreCase = true) ||
                         card.type.contains(_state.value.searchQuery, ignoreCase = true)
             }
-            println("DEBUG: Después de filtrar por búsqueda: ${filtered.size}")
         }
 
         _state.value = _state.value.copy(filteredCards = filtered)
-        println("DEBUG: filterCards - filteredCards final: ${filtered.size}")
     }
 
     private fun validateDeck() {
         val currentDeck = _state.value.currentDeck ?: return
         viewModelScope.launch {
             try {
-                // Usar la validación avanzada que incluye detalles de cartas
+                // Usar la validación con detalles de cartas
                 val result = deckRepository.validateDeckWithCardDetails(
                     currentDeck,
                     _state.value.availableCards
                 )
                 _state.value = _state.value.copy(validationResult = result)
-
-                val totalCards = currentDeck.cards.sumOf { it.count }
-                println("DEBUG: validateDeck - totalCards: $totalCards, errors: ${result.errors.size}, isValid: ${result.isValid}")
-                println("DEBUG: validateDeck - canSave condition: ${result.errors.isEmpty() && totalCards > 0}")
-
             } catch (e: Exception) {
-                println("DEBUG: Error validando mazo: ${e.message}")
                 _state.value = _state.value.copy(
                     error = "Error validando mazo: ${e.message}"
                 )
@@ -256,36 +227,28 @@ class DeckBuilderViewModel @Inject constructor(
     fun saveDeck() {
         val currentDeck = _state.value.currentDeck ?: return
 
-        println("DEBUG: saveDeck() llamado - mazo: ${currentDeck.name}, cartas: ${currentDeck.cards.size}")
+        // Actualizar username por si acaso
+        loadCurrentUser()
+        val deckToSave = currentDeck.copy(username = currentUsername)
 
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
             try {
-                println("DEBUG: Intentando guardar mazo...")
-
-                val success = if (currentDeck.id == 0) {
-                    deckRepository.createDeck(currentDeck)
+                val success = if (deckToSave.id.isEmpty()) {
+                    deckRepository.createDeck(deckToSave)
                 } else {
-                    deckRepository.updateDeck(currentDeck)
+                    deckRepository.updateDeck(deckToSave)
                 }
-
-                println("DEBUG: Resultado del guardado: $success")
 
                 _state.value = _state.value.copy(
                     isLoading = false,
                     successMessage = if (success) "✅ Mazo guardado correctamente" else "❌ Error al guardar mazo",
-                    error = if (!success) "Error al guardar mazo" else null
+                    error = if (!success) "Error al guardar en el servidor" else null
                 )
-
-                if (success) {
-                    println("DEBUG: Mazo guardado exitosamente, recargando cartas...")
-                    loadAvailableCards()
-                }
             } catch (e: Exception) {
-                println("DEBUG: Excepción en saveDeck: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = "Error: ${e.message}"
+                    error = "Error de conexión: ${e.message}"
                 )
             }
         }
@@ -298,14 +261,8 @@ class DeckBuilderViewModel @Inject constructor(
         )
     }
 
-
-
     fun getCardName(cardId: String): String {
-        return _state.value.availableCards.find { it.mongoId == cardId }?.name ?: "Carta Desconocida"
-    }
-
-    fun getCardDetails(cardId: String): com.example.realmsindiscord.data.remote.model.CardModel? {
-        return _state.value.availableCards.find { it.mongoId == cardId }
+        return _state.value.availableCards.find { it.mongoId == cardId }?.name ?: "Cargando..."
     }
 }
 

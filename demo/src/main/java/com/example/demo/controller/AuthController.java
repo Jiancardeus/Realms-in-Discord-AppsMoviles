@@ -67,7 +67,7 @@ public class AuthController {
             System.out.println("🔔 [Spring] Received update-username request");
             System.out.println("📨 [Spring] Request body: " + request);
 
-            String currentUsername = request.get("currentUsername"); // ✅ CAMBIAR
+            String currentUsername = request.get("currentUsername"); //
             String newUsername = request.get("newUsername");
 
             System.out.println("👤 [Spring] currentUsername: " + currentUsername + ", newUsername: " + newUsername);
@@ -117,7 +117,7 @@ public class AuthController {
     }
 
     @DeleteMapping("/user")
-    public ResponseEntity<?> deleteUser(@RequestParam String username) { // ✅ AGREGAR esta línea
+    public ResponseEntity<?> deleteUser(@RequestParam String username) {
         try {
             System.out.println("🔔 [Spring] Received delete user request");
             System.out.println("👤 [Spring] username to delete: " + username);
